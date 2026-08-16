@@ -1,4 +1,4 @@
-# AegisFlow — Agentic AI SOC Investigation & Response Orchestrator
+# AegisFlow — SOC Investigation & Response Automation Platform
 
 AegisFlow is a working, end-to-end SOC (Security Operations Center) automation platform. It ingests
 security alerts, enriches indicators of compromise, runs structured LLM-based triage, retrieves relevant
@@ -246,63 +246,6 @@ _Add screenshots here after running the dashboard locally:_
 - [ ] Incident Detail — IOC Enrichment tab
 - [ ] Approval Centre with a pending proposal
 - [ ] MCP Tool History
-
-## Demo credentials
-
-No login is implemented in this build (see [Threat model](#threat-model-summary) — authentication is
-explicitly out of scope for this portfolio version). The n8n instance in `docker-compose.yml` uses basic
-auth via `N8N_USER` / `N8N_PASSWORD` environment variables (defaults: `admin` / `changeme` — **change
-these before exposing n8n beyond localhost**).
-
-## Resume-ready project description
-
-
-> **AegisFlow — Agentic AI SOC Investigation & Response Orchestrator.** Built a full-stack security
-> automation platform (FastAPI, SQLAlchemy, React/TypeScript, Groq LLM, RAG with pluggable embeddings,
-> MCP, n8n) that ingests alerts, enriches IOCs via VirusTotal/GeoIP/MITRE ATT&CK, runs structured
-> LLM-based triage with strict schema validation and prompt-injection resistance, retrieves SOC runbooks
-> via RAG with source citations, exposes 7 typed security tools over MCP with audit logging and secret
-> redaction, and enforces human-in-the-loop approval before any response action executes. 110 automated
-> tests across ingestion, enrichment, AI triage, RAG, MCP, approvals, and security (SQL injection,
-> secret leakage, rate limiting). Designed for demo-mode-by-default operation with zero required API keys.
-
-## Interview explanation section
-
-**Q1: Walk me through what happens when an alert comes in.**
-A: The alert hits `POST /api/v1/alerts`, gets validated against a strict Pydantic schema, deduplicated by
-a fingerprint (hash of source+alert fields or a client-supplied idempotency key), and stored as an
-Incident. From there, either a human analyst or the n8n workflow triggers enrichment (IOC reputation via
-VirusTotal, GeoIP, MITRE mapping), then AI triage (Groq, with a retrieved SOC runbook as context), which
-produces a structured, schema-validated assessment. If the assessment recommends a response action, it's
-created as a *pending* proposal — nothing executes until a human approves it via the Approval Centre.
-
-**Q2: How do you prevent the LLM's output from being unsafe or unpredictable?**
-A: Every triage response is required to conform to a strict Pydantic schema (`TriageResult`) — classification
-enum, confidence bounds, severity enum, etc. If the model returns malformed JSON or a schema violation, the
-system rejects it and falls back to a conservative rule-based result rather than trusting the invalid output.
-Separately, the system prompt instructs the model to treat all alert fields as data, never as instructions —
-and this is tested directly with adversarial "ignore previous instructions" payloads in the alert description.
-
-**Q3: Why does the MCP server run in its own virtual environment?**
-A: The official `mcp` Python SDK (with `FastMCP`) depends on a newer `starlette` than the FastAPI version
-this project uses. Rather than force a downgrade that could silently break FastAPI behavior later, I isolated
-the MCP server into its own venv/Docker image. It's a small operational cost (two install steps instead of
-one) in exchange for not fighting a dependency conflict that has nothing to do with the actual feature work.
-
-**Q4: What's the difference between "demo mode" and a real deployment here?**
-A: `DEMO_MODE=true` (the default) means: no external API keys required, all response actions are simulated
-(never touch a real firewall/EDR), and enrichment falls back to deterministic demo data when no VirusTotal
-key is present. Every enrichment result carries an explicit `source: live | cached | demo` label so the UI
-and any consumer always knows whether it's looking at real data. Going to a real deployment means adding
-API keys, implementing and auditing a real response adapter behind `ENABLE_REAL_RESPONSE_ADAPTER`, and
-adding an authentication layer (currently out of scope, documented in the threat model).
-
-**Q5: How would you scale this beyond a single SOC analyst's laptop?**
-A: The main scaling seams are already there: swap SQLite for the Postgres-compatible `DATABASE_URL`,
-swap the in-memory TTL cache (`app/services/cache.py`) and rate limiter for Redis-backed versions (same
-tiny interface, drop-in), and swap the in-memory RAG vector store fallback for a real ChromaDB deployment
-(or a managed vector DB). The FastAPI app itself is stateless per-request, so it horizontally scales behind
-a load balancer once the cache/rate-limiter are externalized.
 
 ## License
 
