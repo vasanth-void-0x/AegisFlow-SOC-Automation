@@ -1,0 +1,22 @@
+{
+  "source": "wazuh",
+  "alert_name": "SSH Brute Force Detected",
+  "severity": "high",
+  "description": "15 failed SSH login attempts against demo-user-1 in 60 seconds",
+  "source_ip": "203.0.113.30",
+  "destination_ip": "203.0.113.31",
+  "hostname": "soc-lab-1.example",
+  "username": "demo-user-1",
+  "event_time": "2026-08-12T06:00:00Z",
+  "raw_event": {
+    "attempts": 15,
+    "window_seconds": 60,
+    "protocol": "ssh"
+  },
+  "indicators": [
+    {
+      "type": "ip",
+      "value": "203.0.113.30"
+    }
+  ]
+}

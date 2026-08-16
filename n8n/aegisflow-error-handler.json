@@ -1,0 +1,46 @@
+{
+  "name": "AegisFlow - Error Handler",
+  "id": "aegisflow-error-handler",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "error-trigger",
+      "name": "Error Trigger",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [-400, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract the failure context so it's not silently dropped.\nconst execution = $json.execution;\nconst workflow = $json.workflow;\nreturn [{\n  json: {\n    failed_workflow: workflow?.name,\n    failed_node: execution?.lastNodeExecuted,\n    error_message: execution?.error?.message,\n    timestamp: new Date().toISOString(),\n    severity: 'operational_failure'\n  }\n}];"
+      },
+      "id": "extract-failure-context",
+      "name": "Extract Failure Context",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-160, 0]
+    },
+    {
+      "parameters": {
+        "resource": "noOp",
+        "notes": "Send this to Slack/PagerDuty/email in a real deployment. Left as a NoOp here so the workflow imports without requiring external notification credentials."
+      },
+      "id": "notify-oncall",
+      "name": "Notify On-Call (configure your channel)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [100, 0]
+    }
+  ],
+  "connections": {
+    "Error Trigger": {
+      "main": [[{ "node": "Extract Failure Context", "type": "main", "index": 0 }]]
+    },
+    "Extract Failure Context": {
+      "main": [[{ "node": "Notify On-Call (configure your channel)", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

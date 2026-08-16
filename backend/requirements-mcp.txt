@@ -1,0 +1,18 @@
+# The MCP server runs in its own virtual environment, isolated from the
+# FastAPI backend, because the `mcp` SDK depends on a newer starlette than
+# FastAPI 0.115.x supports. Create a dedicated venv for this:
+#
+#   cd backend
+#   python3 -m venv .venv-mcp
+#   ./.venv-mcp/bin/pip install -r requirements-mcp.txt
+#   ./.venv-mcp/bin/python -m app.mcp_server.server
+#
+# The MCP server talks to the same SQLite database file as the main API
+# (via DATABASE_URL), so both processes can run side by side.
+
+mcp==1.9.4
+sqlalchemy==2.0.36
+httpx==0.28.1
+pydantic==2.10.3
+pydantic-settings==2.7.0
+python-dotenv==1.0.1

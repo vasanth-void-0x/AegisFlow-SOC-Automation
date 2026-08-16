@@ -1,0 +1,77 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+@import "tailwindcss";
+
+@theme {
+  /* Base palette - "eyes on glass" operator console */
+  --color-obsidian: #0a0e13;
+  --color-steel: #12171d;
+  --color-steel-light: #171d24;
+  --color-graphite: #212932;
+  --color-graphite-light: #2a333d;
+  --color-fog: #e7ecf1;
+  --color-ash: #8ca0af;
+  --color-ash-dim: #5f6f7c;
+
+  /* Brand accent - deliberately violet, not the typical cyan/green "hacker" default */
+  --color-signal: #7c6ff0;
+  --color-signal-dim: #4a3fb0;
+  --color-signal-glow: #7c6ff033;
+
+  /* Severity scale - intuitive cool-to-hot gradient, functional not decorative */
+  --color-sev-low: #5b8def;
+  --color-sev-medium: #e8b339;
+  --color-sev-high: #f2793a;
+  --color-sev-critical: #e5484d;
+
+  /* Status */
+  --color-ok: #3ecf8e;
+  --color-warn: #e8b339;
+  --color-danger: #e5484d;
+
+  --font-sans: 'IBM Plex Sans', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  background: var(--color-obsidian);
+  color: var(--color-fog);
+  font-family: var(--font-sans);
+}
+
+::selection {
+  background: var(--color-signal-glow);
+  color: var(--color-fog);
+}
+
+/* Visible keyboard focus - accessibility floor */
+:focus-visible {
+  outline: 2px solid var(--color-signal);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-obsidian);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-graphite-light);
+  border-radius: 5px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-ash-dim);
+}

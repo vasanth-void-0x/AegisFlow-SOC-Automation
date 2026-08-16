@@ -1,0 +1,400 @@
+{
+  "name": "AegisFlow - SOC Alert Orchestration",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "aegisflow-alert",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Alert Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-1600, 0],
+      "webhookId": "aegisflow-alert-webhook"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.AEGISFLOW_API_BASE}}/api/v1/alerts",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.body) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "create-incident",
+      "name": "Create Incident",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [-1360, 0],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "continueOnFail": true,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" },
+          "conditions": [
+            {
+              "leftValue": "={{$json.statusCode}}",
+              "rightValue": 409,
+              "operator": { "type": "number", "operation": "equals" }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "is-duplicate",
+      "name": "Is Duplicate Alert?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [-1120, 0]
+    },
+    {
+      "parameters": {
+        "resource": "noOp"
+      },
+      "id": "duplicate-noop",
+      "name": "Duplicate - Stop (No Action)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [-880, -160]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{$env.AEGISFLOW_API_BASE}}/api/v1/incidents/{{$json.id}}/enrichment",
+        "options": { "timeout": 15000 }
+      },
+      "id": "enrich-indicators",
+      "name": "Enrich Indicators",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [-880, 80],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 3000,
+      "continueOnFail": true,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.AEGISFLOW_API_BASE}}/api/v1/incidents/{{$('Create Incident').item.json.id}}/triage",
+        "options": { "timeout": 30000 }
+      },
+      "id": "run-ai-triage",
+      "name": "Run AI Triage",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [-640, 80],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 3000,
+      "continueOnFail": true,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" },
+          "conditions": [
+            {
+              "leftValue": "={{$json.error}}",
+              "rightValue": "",
+              "operator": { "type": "string", "operation": "notEmpty" }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "triage-failed-check",
+      "name": "Triage Failed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [-400, 80]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "={{$json.result.recommended_severity}}",
+                    "rightValue": "critical",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ]
+              },
+              "outputKey": "critical"
+            },
+            {
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "={{$json.result.recommended_severity}}",
+                    "rightValue": "high",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ]
+              },
+              "outputKey": "high"
+            },
+            {
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "={{$json.result.recommended_severity}}",
+                    "rightValue": "medium",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ]
+              },
+              "outputKey": "medium"
+            }
+          ]
+        },
+        "fallbackOutput": "low"
+      },
+      "id": "severity-branch",
+      "name": "Branch By Severity",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [-160, 80]
+    },
+    {
+      "parameters": {
+        "resource": "noOp",
+        "notes": "Create analyst task in your ticketing system here (Jira/ServiceNow webhook, Slack notification, etc.)"
+      },
+      "id": "create-analyst-task-critical",
+      "name": "Create Analyst Task (P1)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [100, -240]
+    },
+    {
+      "parameters": {
+        "resource": "noOp",
+        "notes": "Create analyst task in your ticketing system here"
+      },
+      "id": "create-analyst-task-high",
+      "name": "Create Analyst Task (P2)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [100, 0]
+    },
+    {
+      "parameters": {
+        "resource": "noOp"
+      },
+      "id": "create-analyst-task-medium",
+      "name": "Create Analyst Task (P3)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [100, 240]
+    },
+    {
+      "parameters": {
+        "resource": "noOp",
+        "notes": "Low severity - log only, no analyst task created"
+      },
+      "id": "log-only-low",
+      "name": "Log Only (Low Severity)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [100, 480]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" },
+          "conditions": [
+            {
+              "leftValue": "={{$json.result.requires_human_approval}}",
+              "rightValue": true,
+              "operator": { "type": "boolean", "operation": "equals" }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "requires-approval-check",
+      "name": "Requires Human Approval?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [360, -120]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.AEGISFLOW_API_BASE}}/api/v1/incidents/{{$('Create Incident').item.json.id}}/proposals",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({action_type: 'isolate_host', target: $('Create Incident').item.json.hostname || $('Create Incident').item.json.source_ip, justification: $json.result.summary, proposed_by: 'n8n_workflow'}) }}",
+        "options": { "timeout": 10000 }
+      },
+      "id": "create-response-proposal",
+      "name": "Create Response Proposal (Pending Approval)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [620, -200],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "continueOnFail": true,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{$env.AEGISFLOW_API_BASE}}/api/v1/incidents/{{$('Create Incident').item.json.id}}/status",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"status\": \"pending_approval\"}",
+        "options": { "timeout": 10000 }
+      },
+      "id": "update-status-pending-approval",
+      "name": "Update Status: Pending Approval",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [880, -200],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{$env.AEGISFLOW_API_BASE}}/api/v1/incidents/{{$('Create Incident').item.json.id}}/status",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"status\": \"triaging\"}",
+        "options": { "timeout": 10000 }
+      },
+      "id": "update-status-triaging",
+      "name": "Update Status: Triaging",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [620, -40],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "resource": "noOp",
+        "notes": "Final node - workflow execution result is visible in n8n's execution log for audit purposes"
+      },
+      "id": "record-workflow-result",
+      "name": "Record Workflow Result",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [1140, -120]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({status: 'accepted', incident_id: $('Create Incident').item.json.id}) }}"
+      },
+      "id": "webhook-response",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1400, -120]
+    },
+    {
+      "parameters": {
+        "resource": "noOp",
+        "notes": "Triage failed and no safe fallback classification was produced - escalate manually. This path must never be silently skipped."
+      },
+      "id": "triage-failure-escalation",
+      "name": "Escalate: Triage Pipeline Failure",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [-160, 320]
+    }
+  ],
+  "connections": {
+    "Alert Webhook": {
+      "main": [[{ "node": "Create Incident", "type": "main", "index": 0 }]]
+    },
+    "Create Incident": {
+      "main": [[{ "node": "Is Duplicate Alert?", "type": "main", "index": 0 }]]
+    },
+    "Is Duplicate Alert?": {
+      "main": [
+        [{ "node": "Duplicate - Stop (No Action)", "type": "main", "index": 0 }],
+        [{ "node": "Enrich Indicators", "type": "main", "index": 0 }]
+      ]
+    },
+    "Enrich Indicators": {
+      "main": [[{ "node": "Run AI Triage", "type": "main", "index": 0 }]]
+    },
+    "Run AI Triage": {
+      "main": [[{ "node": "Triage Failed?", "type": "main", "index": 0 }]]
+    },
+    "Triage Failed?": {
+      "main": [
+        [{ "node": "Escalate: Triage Pipeline Failure", "type": "main", "index": 0 }],
+        [{ "node": "Branch By Severity", "type": "main", "index": 0 }]
+      ]
+    },
+    "Branch By Severity": {
+      "main": [
+        [{ "node": "Create Analyst Task (P1)", "type": "main", "index": 0 }],
+        [{ "node": "Create Analyst Task (P2)", "type": "main", "index": 0 }],
+        [{ "node": "Create Analyst Task (P3)", "type": "main", "index": 0 }],
+        [{ "node": "Log Only (Low Severity)", "type": "main", "index": 0 }]
+      ]
+    },
+    "Create Analyst Task (P1)": {
+      "main": [[{ "node": "Requires Human Approval?", "type": "main", "index": 0 }]]
+    },
+    "Create Analyst Task (P2)": {
+      "main": [[{ "node": "Requires Human Approval?", "type": "main", "index": 0 }]]
+    },
+    "Create Analyst Task (P3)": {
+      "main": [[{ "node": "Record Workflow Result", "type": "main", "index": 0 }]]
+    },
+    "Log Only (Low Severity)": {
+      "main": [[{ "node": "Record Workflow Result", "type": "main", "index": 0 }]]
+    },
+    "Requires Human Approval?": {
+      "main": [
+        [{ "node": "Create Response Proposal (Pending Approval)", "type": "main", "index": 0 }],
+        [{ "node": "Update Status: Triaging", "type": "main", "index": 0 }]
+      ]
+    },
+    "Create Response Proposal (Pending Approval)": {
+      "main": [[{ "node": "Update Status: Pending Approval", "type": "main", "index": 0 }]]
+    },
+    "Update Status: Pending Approval": {
+      "main": [[{ "node": "Record Workflow Result", "type": "main", "index": 0 }]]
+    },
+    "Update Status: Triaging": {
+      "main": [[{ "node": "Record Workflow Result", "type": "main", "index": 0 }]]
+    },
+    "Record Workflow Result": {
+      "main": [[{ "node": "Respond to Webhook", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": "aegisflow-error-handler"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": false
+  }
+}
