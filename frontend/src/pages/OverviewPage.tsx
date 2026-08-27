@@ -59,7 +59,7 @@ export function OverviewPage() {
 
 function ArchitectureCore(){
   const nodes=[['siem','SIEM','Telemetry Ingestion'],['ioc','IOC','Threat Intelligence'],['rag','RAG','Knowledge & Runbooks'],['mcp','MCP','Automation Protocol'],['soar','SOAR','Response Automation']]
-  return <section className="architecture-core"><div className="circuit-lines"/>{nodes.map(([pos,name,detail])=><div key={name} className={`arch-node ${pos}`}><i/ ><div><b>{name}</b><span>{detail}</span><small>Live <em/></small></div></div>)}<div className="processor-chip"><span>AEGISFLOW</span><small>SOC AUTOMATION CORE</small><i/><i/><i/><i/></div></section>
+  return <section className="architecture-core"><div className="circuit-lines"/>{nodes.map(([pos,name,detail])=><div key={name} className={`arch-node ${pos}`}><i/><div><b>{name}</b><span>{detail}</span><small>Live <em/></small></div></div>)}<img className="processor-asset" src="/aegisflow-processor.png" alt="AegisFlow SOC Automation Core processor"/></section>
 }
 function Metric({label,value,accent,note,glyph}:{label:string;value:number;accent:string;note:string;glyph:string}){return <div className="metric-card" style={{'--metric-accent':accent} as CSSProperties}><div className="metric-top"><span>{label}</span><i>{glyph}</i></div><strong>{String(value).padStart(2,'0')}</strong><div className="metric-note"><span/> {note}</div></div>}
 function Capability({value,label,detail}:{value:string;label:string;detail:string}){return <div className="capability"><strong>{value}</strong><div><b>{label}</b><span>{detail}</span></div><i>VERIFIED</i></div>}
