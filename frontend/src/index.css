@@ -99,6 +99,11 @@ body {
 @media(max-width:1200px){.architecture-core{height:410px;background-size:100% 100%,cover,100% 100%}}
 @media(max-width:760px){.sidebar{background:#02080bf5}.architecture-core{height:510px;background-size:auto 100%,auto 58%,100% 100%}.v-sticker{display:none}}
 
+/* Seamless panoramic architecture background */
+.architecture-core{height:390px;background-color:#010407;background-image:linear-gradient(180deg,#01040722 0,transparent 18%,transparent 82%,#0104074d 100%),url('/aegisflow-architecture-hero.png');background-repeat:no-repeat;background-position:center;background-size:cover;border-color:#14506a;box-shadow:inset 0 0 25px #0008,0 18px 45px #0005}.architecture-core:before,.architecture-core:after{display:none}.circuit-lines,.arch-node,.processor-asset{display:none}.hero-live{position:absolute;z-index:3;right:14px;top:12px;display:flex;align-items:center;gap:6px;padding:5px 8px;border:1px solid #1a5b71;border-radius:4px;background:#01070ba8;color:#81dbed;font:600 6px var(--font-mono);letter-spacing:1px;backdrop-filter:blur(8px)}.hero-live span{width:5px;height:5px;border-radius:50%;background:var(--color-ok);box-shadow:0 0 7px var(--color-ok)}
+@media(max-width:1200px){.architecture-core{height:370px;background-size:cover}}
+@media(max-width:760px){.architecture-core{height:310px;background-size:cover;background-position:center}.hero-live{right:8px;top:8px}}
+
 ::selection {
   background: var(--color-signal-glow);
   color: var(--color-fog);
