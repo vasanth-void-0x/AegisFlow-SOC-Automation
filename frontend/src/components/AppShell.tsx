@@ -40,6 +40,14 @@ export function AppShell() {
       <div className="brand-lockup"><div className="brand-mark"><span>A</span></div><div><div className="brand-name">AEGIS<span>FLOW</span></div><div className="brand-caption">SOC AUTOMATION</div></div></div>
       <div className="nav-label">OPERATIONS</div>
       <nav className="sidebar-nav">{NAV_ITEMS.map(item=><NavLink key={item.to} to={item.to} end={item.end} onClick={()=>setMobileNavOpen(false)} className={({isActive})=>`nav-item ${isActive?'active':''}`}><Icon name={item.icon}/><span>{item.label}</span><span className="nav-chevron">›</span></NavLink>)}</nav>
+      <div className="v-sticker" aria-label="V Security Automation">
+        <svg viewBox="0 0 180 94" role="img" aria-hidden="true">
+          <path className="wing left" d="M80 35C58 7 27 5 7 8c19 8 32 18 42 31-14-7-27-8-39-7 17 7 29 16 40 29-13-5-23-5-32-3 18 7 34 18 51 29"/>
+          <path className="wing right" d="M100 35c22-28 53-30 73-27-19 8-32 18-42 31 14-7 27-8 39-7-17 7-29 16-40 29 13-5 23-5 32-3-18 7-34 18-51 29"/>
+          <path className="v-core" d="M58 20h23l9 27 9-27h23L91 88z"/>
+        </svg>
+        <div><b>V</b><span>SECURITY AUTOMATION</span></div>
+      </div>
       <div className="sidebar-status"><div className="status-row"><span className={`status-orb ${healthError?'offline':''}`}/><div><b>{healthLabel}</b><small>{health?health.environment+' environment':'Connecting to core'}</small></div></div><div className="status-meta"><span>SECURITY CORE</span><b>{healthError?'OFFLINE':'ACTIVE'}</b></div></div>
     </aside>
     <main className="workspace"><div className="ambient-grid" aria-hidden="true"/><header className="command-bar"><div><span className="eyebrow">SOC OPERATIONS /</span><strong>{currentTitle}</strong></div><div className="command-actions"><span className="utc-clock">LIVE TELEMETRY</span><span className="live-dot"/><div className="operator-avatar">VK</div></div></header><div className="workspace-content"><Outlet/></div></main>
