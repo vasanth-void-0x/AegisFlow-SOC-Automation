@@ -28,8 +28,13 @@ export function OverviewPage() {
   return <div className="overview-page page-pad">
     <section className="page-intro"><div><span className="section-kicker">REAL-TIME VISIBILITY · INTELLIGENT AUTOMATION · RAPID RESPONSE</span><h1>SOC Command Center</h1><p>AegisFlow investigation and response automation platform.</p></div><div className="sync-badge"><span/>Automation active</div></section>
 
-    <section className="command-layout layered-command">
-      <ArchitectureCore/>
+    <section className="command-layout">
+      <div className="command-main">
+        <ArchitectureCore/>
+        <Panel title="Live Incident Stream" subtitle={recent.length+' latest security events'} action={<Link to="/incidents" className="panel-link">VIEW ALL →</Link>} className="incident-panel">
+          {recent.length===0?<div className="empty-radar"><div className="radar-visual"><span/><i/><b/></div><strong>Monitoring all configured sources</strong><p>No active incidents. AegisFlow is ready to ingest SIEM, EDR or webhook alerts.</p><Link to="/health">VIEW SYSTEM READINESS →</Link></div>:<div className="incident-list">{recent.map(i=><IncidentRow key={i.id} incident={i}/>)}</div>}
+        </Panel>
+      </div>
       <aside className="response-rail">
         <Panel title="AegisFlow Response Pipeline" subtitle="Investigation workflow">
           <div className="response-pipeline">{PIPELINE.map(([n,name,detail,status,icon],idx)=><div className="response-step" key={n}><div className="step-node"><PipelineIcon name={icon}/><em>{n}</em></div>{idx<PIPELINE.length-1&&<span className="step-line"/>}<div className="step-copy"><b>{name}</b><small>{detail}</small></div><i className={status==='GATED'?'gated':''}>{status}</i></div>)}</div>
@@ -40,10 +45,6 @@ export function OverviewPage() {
         </Panel>
       </aside>
     </section>
-
-    <Panel title="Live Incident Stream" subtitle={recent.length+' latest security events'} action={<Link to="/incidents" className="panel-link">VIEW ALL →</Link>} className="incident-panel overview-incidents">
-      {recent.length===0?<div className="empty-radar"><div className="radar-visual"><span/><i/><b/></div><strong>Monitoring all configured sources</strong><p>No active incidents. AegisFlow is ready to ingest SIEM, EDR or webhook alerts.</p><Link to="/health">VIEW SYSTEM READINESS →</Link></div>:<div className="incident-list">{recent.map(i=><IncidentRow key={i.id} incident={i}/>)}</div>}
-    </Panel>
 
     <section className="metric-grid lower-metrics">
       <Metric label="Open Incidents" value={openCount} accent="var(--color-signal)" note="Requires analyst attention" glyph="01"/>
@@ -58,7 +59,7 @@ export function OverviewPage() {
 }
 
 function ArchitectureCore(){
-  return <section className="architecture-core" aria-label="AegisFlow architecture: SIEM, IOC, RAG, MCP and SOAR connected to the SOC automation core"><div className="hero-live"><span/>LIVE ARCHITECTURE</div></section>
+  return <section className="architecture-core hero-spacer" aria-label="AegisFlow architecture: SIEM, IOC, RAG, MCP and SOAR connected to the SOC automation core"><div className="hero-live"><span/>LIVE ARCHITECTURE</div></section>
 }
 function PipelineIcon({name}:{name:string}){const path:Record<string,React.ReactNode>={download:<path d="M12 3v11m0 0 4-4m-4 4-4-4M5 18h14v3H5z"/>,nodes:<><circle cx="6" cy="6" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="12" cy="18" r="2"/><path d="m8 7 3 9m5-9-3 9M8 6h8"/></>,brain:<><path d="M9 4a3 3 0 0 0-3 3v1a3 3 0 0 0-1 5 3 3 0 0 0 4 4"/><path d="M15 4a3 3 0 0 1 3 3v1a3 3 0 0 1 1 5 3 3 0 0 1-4 4M12 3v18M9 9h3M12 15h3"/></>,search:<><circle cx="10" cy="10" r="6"/><path d="m15 15 5 5"/></>,user:<><circle cx="12" cy="8" r="4"/><path d="M5 21a7 7 0 0 1 14 0m-3-7 2 2 4-4"/></>,shield:<><path d="M12 3 4 6v6c0 5 3 8 8 10 5-2 8-5 8-10V6z"/><path d="m9 12 2 2 4-4"/></>};return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">{path[name]}</svg>}
 function Metric({label,value,accent,note,glyph}:{label:string;value:number;accent:string;note:string;glyph:string}){return <div className="metric-card" style={{'--metric-accent':accent} as CSSProperties}><div className="metric-top"><span>{label}</span><i>{glyph}</i></div><div className="metric-value"><strong>{String(value).padStart(2,'0')}</strong><svg viewBox="0 0 100 32" preserveAspectRatio="none"><path d="M1 27 15 23 27 25 41 14 54 18 68 8 82 12 99 3"/></svg></div><div className="metric-note"><span/> {note}</div></div>}

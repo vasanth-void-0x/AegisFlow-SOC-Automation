@@ -34,6 +34,7 @@ export function AppShell() {
   const healthLabel=healthError?'Backend offline':health?.status==='ok'?'All systems operational':'Checking systems'
   const currentTitle=location.pathname.startsWith('/incidents/')?'Incident Investigation':PAGE_TITLES[location.pathname]||'AegisFlow'
   return <div className="app-frame">
+    {location.pathname==='/'&&<div className="aegis-bg-scene" aria-hidden="true"><div className="aegis-bg-picture"/><div className="aegis-bg-scanline"/></div>}
     <div className="mobile-bar"><button onClick={()=>setMobileNavOpen(true)} aria-label="Open navigation"><Icon name="grid"/></button><span>AEGISFLOW</span></div>
     {mobileNavOpen&&<div className="drawer-overlay" onClick={()=>setMobileNavOpen(false)}/>}
     <aside className={`sidebar ${mobileNavOpen?'open':''}`}>

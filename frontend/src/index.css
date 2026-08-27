@@ -129,25 +129,27 @@ body{background-image:none!important}
 .architecture-core:hover{filter:brightness(1.04)}
 .hero-live{right:7px;top:7px;background:#0009}
 
-/* Layered command scene: the architecture is the stable ground plane while
-   operational rails render independently above it, like the RAGExploit HUD. */
-@media(min-width:1201px){
-  .layered-command{position:relative;display:block;min-height:390px;margin-bottom:14px}
-  .layered-command>.architecture-core{z-index:1;width:calc(100% - 306px);height:390px;background-position:50% 50%;background-size:contain}
-  .layered-command>.response-rail{position:absolute;z-index:4;top:0;right:0;width:292px}
-  .layered-command>.response-rail .soc-panel{background:#020b12e6;backdrop-filter:blur(14px);box-shadow:0 18px 45px #0009}
-  .overview-incidents,.overview-page>.lower-metrics,.overview-page>.capability-strip{width:calc(100% - 306px)}
-}
-@media(min-width:761px) and (max-width:1200px){
-  .layered-command{display:grid;grid-template-columns:1fr;gap:14px}
-  .layered-command>.response-rail{position:static;grid-template-columns:1fr 1fr}
-}
 @media(max-width:760px){
   body{width:100%;min-height:100vh}
-  .layered-command{display:block}
-  .layered-command>.response-rail{margin-top:14px}
   .architecture-core{height:300px;border:0;border-radius:0;background-color:#000;background-size:contain}
 }
+
+/* RAGExploit reference architecture: one viewport-fixed ground artwork,
+   then the application shell and rails render as independent HUD layers. */
+.aegis-bg-scene{position:fixed;inset:0;z-index:0;overflow:hidden;background:#000;pointer-events:none}
+.aegis-bg-picture{position:absolute;inset:0;background-image:url('/aegisflow-architecture-hero.png');background-repeat:no-repeat;background-size:min(1280px,92vw) auto;background-position:52% 145px;filter:saturate(1.14) contrast(1.16) brightness(.94);mix-blend-mode:screen;-webkit-mask-image:linear-gradient(to bottom,#000 0,#000 56%,#0008 72%,transparent 91%);mask-image:linear-gradient(to bottom,#000 0,#000 56%,#0008 72%,transparent 91%)}
+.aegis-bg-picture:after{content:'';position:absolute;inset:0;background:radial-gradient(circle at 52% 34%,transparent 0 24%,#0002 47%,#0009 86%),linear-gradient(to bottom,transparent 0 58%,#0005 76%,#000 96%)}
+.aegis-bg-scanline{position:absolute;left:208px;right:0;height:1px;background:linear-gradient(90deg,transparent,#28d7f2 24%,#84efff 50%,#28d7f2 76%,transparent);box-shadow:0 0 15px #28d7f288;opacity:.28;animation:aegisSweep 8s linear infinite}
+@keyframes aegisSweep{0%{top:8%;opacity:0}10%,90%{opacity:.28}100%{top:92%;opacity:0}}
+.app-frame{position:relative;background:transparent}
+.workspace{position:relative;z-index:2;background:transparent}
+.workspace-content,.overview-page{background:transparent}
+.overview-page .architecture-core.hero-spacer{height:390px;background:none!important;box-shadow:none;border:0;filter:none}
+.overview-page .response-rail{position:relative;z-index:5}
+.overview-page .response-rail .soc-panel{background:#020a10ad;backdrop-filter:blur(9px);box-shadow:0 16px 42px #0008}
+.overview-page .page-intro{position:relative;z-index:5}
+@media(max-width:1200px){.aegis-bg-picture{background-size:min(980px,100vw) auto;background-position:center 140px}}
+@media(max-width:760px){.aegis-bg-picture{background-size:900px auto;background-position:center 115px}.aegis-bg-scanline{left:0}.overview-page .architecture-core.hero-spacer{height:280px}}
 
 ::selection {
   background: var(--color-signal-glow);
