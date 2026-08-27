@@ -137,7 +137,7 @@ body{background-image:none!important}
 /* RAGExploit reference architecture: one viewport-fixed ground artwork,
    then the application shell and rails render as independent HUD layers. */
 .aegis-bg-scene{position:fixed;inset:0;z-index:0;overflow:hidden;background:#000;pointer-events:none}
-.aegis-bg-picture{position:absolute;inset:0;background-image:url('/aegisflow-architecture-hero.png');background-repeat:no-repeat;background-size:min(1280px,92vw) auto;background-position:52% 145px;filter:saturate(1.14) contrast(1.16) brightness(.94);mix-blend-mode:screen;-webkit-mask-image:linear-gradient(to bottom,#000 0,#000 56%,#0008 72%,transparent 91%);mask-image:linear-gradient(to bottom,#000 0,#000 56%,#0008 72%,transparent 91%)}
+.aegis-bg-picture{position:absolute;inset:0;background-image:url('/aegisflow-architecture-hero.png');background-repeat:no-repeat;background-size:min(1024px,80vw) auto;background-position:52% 155px;filter:saturate(1.14) contrast(1.16) brightness(.94);mix-blend-mode:screen;-webkit-mask-image:linear-gradient(to bottom,#000 0,#000 56%,#0008 72%,transparent 91%);mask-image:linear-gradient(to bottom,#000 0,#000 56%,#0008 72%,transparent 91%)}
 .aegis-bg-picture:after{content:'';position:absolute;inset:0;background:radial-gradient(circle at 52% 34%,transparent 0 24%,#0002 47%,#0009 86%),linear-gradient(to bottom,transparent 0 58%,#0005 76%,#000 96%)}
 .aegis-bg-scanline{position:absolute;left:208px;right:0;height:1px;background:linear-gradient(90deg,transparent,#28d7f2 24%,#84efff 50%,#28d7f2 76%,transparent);box-shadow:0 0 15px #28d7f288;opacity:.28;animation:aegisSweep 8s linear infinite}
 @keyframes aegisSweep{0%{top:8%;opacity:0}10%,90%{opacity:.28}100%{top:92%;opacity:0}}
@@ -148,6 +148,11 @@ body{background-image:none!important}
 .overview-page .response-rail{position:relative;z-index:5}
 .overview-page .response-rail .soc-panel{background:#020a10ad;backdrop-filter:blur(9px);box-shadow:0 16px 42px #0008}
 .overview-page .page-intro{position:relative;z-index:5}
+.overview-page .lower-metrics .metric-card{background:linear-gradient(145deg,#06131e91,#01060970);backdrop-filter:blur(7px);box-shadow:inset 0 1px #ffffff08,0 12px 28px #0003}
+.overview-page .metric-top i{width:30px;height:30px;background:#02090f73}
+.overview-page .metric-top i svg{width:17px;height:17px;filter:drop-shadow(0 0 5px var(--metric-accent))}
+.overview-page .capability-strip{background:#04101a70;backdrop-filter:blur(7px);box-shadow:0 12px 28px #0003}
+.overview-page .capability{background:transparent}
 @media(max-width:1200px){.aegis-bg-picture{background-size:min(980px,100vw) auto;background-position:center 140px}}
 @media(max-width:760px){.aegis-bg-picture{background-size:900px auto;background-position:center 115px}.aegis-bg-scanline{left:0}.overview-page .architecture-core.hero-spacer{height:280px}}
 
