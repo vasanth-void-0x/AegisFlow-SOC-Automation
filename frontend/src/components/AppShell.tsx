@@ -32,10 +32,10 @@ function MatrixRain(){
 }
 
 function ProcessorNodes(){
-  const paths=['M700 315 L640 282 L580 225 L520 225 L470 180 L410 180','M690 334 L620 334 L565 355 L500 355 L445 326 L330 326','M735 430 L670 430 L615 470 L555 470 L510 510 L410 510','M1100 300 L1190 250 L1270 250 L1330 190 L1445 190','M1110 355 L1210 355 L1280 382 L1340 420 L1400 458 L1490 458','M900 180 L900 130 L860 95 L860 45']
+  const paths=['M700 315 L640 282 L580 225 L520 225 L470 180 L410 180','M690 334 L620 334 L565 355 L500 355 L445 326 L330 326','M735 430 L670 430 L615 470 L555 470 L510 510 L410 510','M1100 300 L1190 250 L1270 250 L1330 190 L1445 190','M1110 355 L1210 355 L1280 382 L1340 420 L1400 458 L1490 458','M900 180 L900 130 L860 95 L860 45','M710 290 L650 250 L600 205 L545 205 L500 160 L430 160','M705 370 L630 390 L575 420 L520 420 L470 390 L385 390','M1090 280 L1170 225 L1240 225 L1300 165 L1410 165','M1095 390 L1180 405 L1250 445 L1310 490 L1420 490']
   const endpoints=[[392,111],[305,300],[392,493],[1667,161],[1713,460]]
-  const junctions=[[700,315],[690,334],[735,430],[1100,300],[1110,355],[900,180]]
-  return <svg className="processor-node-layer" viewBox="0 0 1800 675" preserveAspectRatio="xMidYMid meet"><defs><filter id="traceGlow"><feGaussianBlur stdDeviation="4" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter><linearGradient id="traceEnergy"><stop offset="0" stopColor="#38dfff" stopOpacity="0"/><stop offset=".5" stopColor="#e1fbff"/><stop offset="1" stopColor="#38dfff" stopOpacity="0"/></linearGradient></defs>{paths.map((path,i)=><path key={path} d={path} pathLength="100" className={`data-trace trace-${i+1}`} filter="url(#traceGlow)"/>)}{junctions.map(([cx,cy],i)=><circle key={`j${i}`} cx={cx} cy={cy} r="4" className={`circuit-junction pulse-delay-${i}`}/>)}{endpoints.map(([cx,cy],i)=><g key={`e${i}`} className={`endpoint-beacon pulse-delay-${i}`}><circle cx={cx} cy={cy} r="12" className="beacon-ring"/><circle cx={cx} cy={cy} r="4" className="beacon-core"/></g>)}</svg>
+  const junctions=[[700,315],[640,282],[580,225],[690,334],[565,355],[735,430],[615,470],[1100,300],[1190,250],[1110,355],[1280,382],[1400,458],[900,180],[900,130],[710,290],[705,370],[1090,280],[1095,390]]
+  return <svg className="processor-node-layer" viewBox="0 0 1800 675" preserveAspectRatio="xMidYMid meet"><defs><filter id="traceGlow"><feGaussianBlur stdDeviation="4" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter><linearGradient id="traceEnergy"><stop offset="0" stopColor="#086fff" stopOpacity="0"/><stop offset=".42" stopColor="#19bfff"/><stop offset=".68" stopColor="#72e8ff"/><stop offset="1" stopColor="#087cff" stopOpacity="0"/></linearGradient></defs>{paths.map((path,i)=><path key={path} d={path} pathLength="100" className={`data-trace trace-${i+1}`} filter="url(#traceGlow)"/>)}{junctions.map(([cx,cy],i)=><circle key={`j${i}`} cx={cx} cy={cy} r="3.5" className={`circuit-junction pulse-delay-${i%6}`}/>)}{endpoints.map(([cx,cy],i)=><g key={`e${i}`} className={`endpoint-beacon pulse-delay-${i}`}><circle cx={cx} cy={cy} r="12" className="beacon-ring"/><circle cx={cx} cy={cy} r="4" className="beacon-core"/></g>)}</svg>
 }
 
 export function AppShell() {
@@ -47,7 +47,7 @@ export function AppShell() {
   const healthLabel=healthError?'Backend offline':health?.status==='ok'?'All systems operational':'Checking systems'
   const currentTitle=location.pathname.startsWith('/incidents/')?'Incident Investigation':PAGE_TITLES[location.pathname]||'AegisFlow'
   return <div className="app-frame">
-    {location.pathname==='/'&&<div className="aegis-bg-scene" aria-hidden="true"><MatrixRain/><div className="aegis-bg-picture"/><ProcessorNodes/><div className="aegis-bg-scanline"/></div>}
+    {location.pathname==='/'&&<div className="aegis-bg-scene" aria-hidden="true"><MatrixRain/><div className="aegis-bg-picture"/><ProcessorNodes/></div>}
     <div className="mobile-bar"><button onClick={()=>setMobileNavOpen(true)} aria-label="Open navigation"><Icon name="grid"/></button><span>AEGISFLOW</span></div>
     {mobileNavOpen&&<div className="drawer-overlay" onClick={()=>setMobileNavOpen(false)}/>}
     <aside className={`sidebar ${mobileNavOpen?'open':''}`}>
