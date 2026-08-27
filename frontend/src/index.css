@@ -104,6 +104,26 @@ body {
 @media(max-width:1200px){.architecture-core{height:370px;background-size:cover}}
 @media(max-width:760px){.architecture-core{height:310px;background-size:cover;background-position:center}.hero-live{right:8px;top:8px}}
 
+/* Desktop density and seamless black canvas */
+@media(min-width:761px){
+  body{zoom:.8;width:125%;min-height:125vh}
+}
+html,body,#root{background:#000!important}
+body{background-image:none!important}
+.app-frame{background:#000;background-image:none}
+.workspace,.workspace-content,.overview-page{background:#000}
+.ambient-grid{display:none}
+.command-bar{background:#010406f2}
+.sidebar{background:#000;box-shadow:16px 0 45px #000}
+.page-intro{background:transparent}
+.architecture-core{height:390px;border:0;border-radius:0;background-color:#000;background-image:url('/aegisflow-architecture-hero.png');background-repeat:no-repeat;background-position:center;background-size:contain;box-shadow:none}
+.architecture-core:hover{filter:brightness(1.04)}
+.hero-live{right:7px;top:7px;background:#0009}
+@media(max-width:760px){
+  body{zoom:1;width:100%;min-height:100vh}
+  .architecture-core{height:300px;border:0;border-radius:0;background-color:#000;background-size:contain}
+}
+
 ::selection {
   background: var(--color-signal-glow);
   color: var(--color-fog);
