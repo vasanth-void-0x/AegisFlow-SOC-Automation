@@ -23,9 +23,15 @@ export function OverviewPage() {
       <Metric label="High Severity" value={counts.high} accent="var(--color-sev-high)" note={Math.round(counts.high/total*100)+'% of total volume'} glyph="H"/>
       <Metric label="Medium / Low" value={counts.medium+counts.low} accent="var(--color-sev-medium)" note="Monitored by automation" glyph="M"/>
     </section>
+    <section className="capability-strip" aria-label="AegisFlow engineering coverage">
+      <Capability value="11" label="AUTOMATION PHASES" detail="End-to-end SOC workflow"/>
+      <Capability value="07" label="MCP SECURITY TOOLS" detail="Typed and audit logged"/>
+      <Capability value="06" label="RAG RUNBOOKS" detail="Evidence-linked guidance"/>
+      <Capability value="110" label="TEST SCENARIOS" detail="Backend security coverage"/>
+    </section>
     <section className="overview-grid">
       <Panel title="Live Incident Stream" subtitle={recent.length+' latest security events'} action={<Link to="/incidents" className="panel-link">OPEN QUEUE →</Link>} className="incident-panel">
-        {recent.length===0?<div className="empty-radar"><div className="radar-ring"/><b>No incidents detected</b><span>The pipeline is monitoring incoming sources.</span></div>:<div className="incident-list">{recent.map(i=><IncidentRow key={i.id} incident={i}/>)}</div>}
+        {recent.length===0?<div className="empty-radar"><div className="radar-visual"><span/><i/><b/></div><strong>Monitoring all configured sources</strong><p>No active incidents in the queue. AegisFlow is ready to ingest SIEM, EDR or webhook alerts.</p><Link to="/health">VIEW SYSTEM READINESS →</Link></div>:<div className="incident-list">{recent.map(i=><IncidentRow key={i.id} incident={i}/>)}</div>}
       </Panel>
       <div className="right-stack">
         <Panel title="Threat Distribution" subtitle="Current severity mix">
@@ -38,4 +44,5 @@ export function OverviewPage() {
   </div>
 }
 function Metric({label,value,accent,note,glyph}:{label:string;value:number;accent:string;note:string;glyph:string}){return <div className="metric-card" style={{'--metric-accent':accent} as CSSProperties}><div className="metric-top"><span>{label}</span><i>{glyph}</i></div><strong>{String(value).padStart(2,'0')}</strong><div className="metric-note"><span/> {note}</div></div>}
+function Capability({value,label,detail}:{value:string;label:string;detail:string}){return <div className="capability"><strong>{value}</strong><div><b>{label}</b><span>{detail}</span></div><i>VERIFIED</i></div>}
 function IncidentRow({incident}:{incident:Incident}){return <Link to={`/incidents/${incident.id}`} className="incident-row"><span className="severity-line" style={{background:severityColor(incident.severity)}}/><div className="incident-icon">!</div><div className="incident-main"><b>{incident.alert_name}</b><span>{incident.source} · {incident.id}</span></div><time>{new Date(incident.created_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</time><SeverityBadge severity={incident.severity}/><StatusBadge status={incident.status}/><span className="row-arrow">›</span></Link>}
