@@ -170,6 +170,8 @@ body{background-image:none!important}
 .right-rail-brand,.right-rail-automation{display:none}
 .brand-mark.crystal-v{overflow:visible;clip-path:none;border:0;background:transparent;box-shadow:none;filter:none}
 .brand-mark.crystal-v img{display:block;width:46px;height:46px;object-fit:contain;filter:drop-shadow(0 0 8px #27dfff8c)}
+.v-sticker .v-sticker-wordmark{display:flex;justify-content:center;gap:0;margin-top:-3px;color:#eafaff;font:800 11px var(--font-mono);letter-spacing:1.8px;text-shadow:0 0 8px #28d7f277}
+.v-sticker .v-sticker-wordmark span{color:#35ddff;font:inherit;letter-spacing:inherit;text-shadow:0 0 9px #28d7f2}
 .sidebar-automation{display:flex;align-items:center;gap:9px;margin:auto 12px 10px;padding:12px 10px;border:1px solid #15526b;border-radius:7px;background:#03101978;backdrop-filter:blur(7px);box-shadow:inset 0 0 18px #28d7f20a}
 .automation-orb{display:grid;place-items:center;width:30px;height:30px;border:1px solid #1d7894;border-radius:7px;background:#041722}.automation-orb span{width:7px;height:7px;border-radius:50%;background:var(--color-ok);box-shadow:0 0 10px var(--color-ok);animation:pipelinePulse 2s ease-in-out infinite}
 .sidebar-automation>div:nth-child(2){min-width:0;flex:1}.sidebar-automation b{display:block;color:#bfffea;font:700 8px var(--font-mono);letter-spacing:.5px}.sidebar-automation small{display:block;margin-top:4px;color:#607d8e;font-size:6px}.sidebar-automation em{color:var(--color-ok);font:700 5px var(--font-mono);font-style:normal;letter-spacing:.7px}
