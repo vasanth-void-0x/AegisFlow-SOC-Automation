@@ -31,7 +31,12 @@ function MatrixRain(){
   return <canvas ref={ref} className="aegis-matrix"/>
 }
 
-function ProcessorNodes(){const paths=['M900 337 L610 337 L420 240 L120 205','M900 337 L590 420 L350 510 L90 520','M900 337 L650 520 L400 600 L170 620','M900 337 L1190 337 L1410 230 L1710 205','M900 337 L1210 430 L1470 525 L1730 535','M900 337 L900 95'];return <svg className="processor-node-layer" viewBox="0 0 1800 675" preserveAspectRatio="xMidYMid meet"><defs><filter id="nodeGlow"><feGaussianBlur stdDeviation="7" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>{paths.map((path,i)=><g key={path}><circle r="8" fill="#d9fbff" filter="url(#nodeGlow)"><animateMotion dur={`${3.6+i*.35}s`} begin={`${i*-.55}s`} repeatCount="indefinite" path={path}/></circle><circle r="3" fill="#43dcff"><animateMotion dur={`${3.6+i*.35}s`} begin={`${i*-.55}s`} repeatCount="indefinite" path={path}/></circle></g>)}</svg>}
+function ProcessorNodes(){
+  const paths=['M700 315 L640 282 L580 225 L520 225 L470 180 L410 180','M690 334 L620 334 L565 355 L500 355 L445 326 L330 326','M735 430 L670 430 L615 470 L555 470 L510 510 L410 510','M1100 300 L1190 250 L1270 250 L1330 190 L1445 190','M1110 355 L1210 355 L1280 382 L1340 420 L1400 458 L1490 458','M900 180 L900 130 L860 95 L860 45']
+  const endpoints=[[392,111],[305,300],[392,493],[1667,161],[1713,460]]
+  const junctions=[[700,315],[690,334],[735,430],[1100,300],[1110,355],[900,180]]
+  return <svg className="processor-node-layer" viewBox="0 0 1800 675" preserveAspectRatio="xMidYMid meet"><defs><filter id="traceGlow"><feGaussianBlur stdDeviation="4" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter><linearGradient id="traceEnergy"><stop offset="0" stopColor="#38dfff" stopOpacity="0"/><stop offset=".5" stopColor="#e1fbff"/><stop offset="1" stopColor="#38dfff" stopOpacity="0"/></linearGradient></defs>{paths.map((path,i)=><path key={path} d={path} pathLength="100" className={`data-trace trace-${i+1}`} filter="url(#traceGlow)"/>)}{junctions.map(([cx,cy],i)=><circle key={`j${i}`} cx={cx} cy={cy} r="4" className={`circuit-junction pulse-delay-${i}`}/>)}{endpoints.map(([cx,cy],i)=><g key={`e${i}`} className={`endpoint-beacon pulse-delay-${i}`}><circle cx={cx} cy={cy} r="12" className="beacon-ring"/><circle cx={cx} cy={cy} r="4" className="beacon-core"/></g>)}</svg>
+}
 
 export function AppShell() {
   const [health,setHealth]=useState<HealthStatus|null>(null)
