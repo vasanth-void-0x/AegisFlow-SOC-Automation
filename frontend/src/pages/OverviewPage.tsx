@@ -1,4 +1,5 @@
 import { useEffect, useState, type CSSProperties } from 'react'
+import type React from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../api/client'
 import type { Incident } from '../api/types'
@@ -7,12 +8,12 @@ import { SeverityBadge, severityColor } from '../components/SeverityBadge'
 import { StatusBadge } from '../components/StatusBadge'
 
 const PIPELINE = [
-  ['01','Ingest','Collect telemetry & alerts','LIVE'],
-  ['02','Enrich','Add IOC context & threat intel','LIVE'],
-  ['03','AI Triage','Prioritize with AI/ML','ACTIVE'],
-  ['04','Investigate','Automated evidence analysis','READY'],
-  ['05','Approve','Human-in-the-loop decision','GATED'],
-  ['06','Respond','Simulated containment','SAFE'],
+  ['01','Ingest','Collect telemetry & alerts','LIVE','download'],
+  ['02','Enrich','Add IOC context & threat intel','LIVE','nodes'],
+  ['03','AI Triage','Prioritize with AI/ML','ACTIVE','brain'],
+  ['04','Investigate','Automated evidence analysis','READY','search'],
+  ['05','Approve','Human-in-the-loop decision','GATED','user'],
+  ['06','Respond','Simulated containment','SAFE','shield'],
 ]
 
 export function OverviewPage() {
@@ -36,7 +37,7 @@ export function OverviewPage() {
       </div>
       <aside className="response-rail">
         <Panel title="AegisFlow Response Pipeline" subtitle="Investigation workflow">
-          <div className="response-pipeline">{PIPELINE.map(([n,name,detail,status],idx)=><div className="response-step" key={n}><div className="step-node">{n}</div>{idx<PIPELINE.length-1&&<span className="step-line"/>}<div className="step-copy"><b>{name}</b><small>{detail}</small></div><i className={status==='GATED'?'gated':''}>{status}</i></div>)}</div>
+          <div className="response-pipeline">{PIPELINE.map(([n,name,detail,status,icon],idx)=><div className="response-step" key={n}><div className="step-node"><PipelineIcon name={icon}/><em>{n}</em></div>{idx<PIPELINE.length-1&&<span className="step-line"/>}<div className="step-copy"><b>{name}</b><small>{detail}</small></div><i className={status==='GATED'?'gated':''}>{status}</i></div>)}</div>
           <div className="readiness"><div><span>PIPELINE READINESS</span><b>92%</b></div><div className="readiness-bar"><i/><i/><i/><i/><i/><i/><i/><i/><i/><span/></div></div>
         </Panel>
         <Panel title="System Status" subtitle="Core service readiness">
@@ -59,8 +60,9 @@ export function OverviewPage() {
 
 function ArchitectureCore(){
   const nodes=[['siem','SIEM','Telemetry Ingestion'],['ioc','IOC','Threat Intelligence'],['rag','RAG','Knowledge & Runbooks'],['mcp','MCP','Automation Protocol'],['soar','SOAR','Response Automation']]
-  return <section className="architecture-core"><div className="circuit-lines"/>{nodes.map(([pos,name,detail])=><div key={name} className={`arch-node ${pos}`}><i/><div><b>{name}</b><span>{detail}</span><small>Live <em/></small></div></div>)}<img className="processor-asset" src="/aegisflow-processor.png" alt="AegisFlow SOC Automation Core processor"/></section>
+  return <section className="architecture-core"><div className="circuit-lines"/>{nodes.map(([pos,name,detail])=><div key={name} className={`arch-node ${pos}`}><i/><div><b>{name}</b><span>{detail}</span><small>Live <em/></small></div></div>)}</section>
 }
-function Metric({label,value,accent,note,glyph}:{label:string;value:number;accent:string;note:string;glyph:string}){return <div className="metric-card" style={{'--metric-accent':accent} as CSSProperties}><div className="metric-top"><span>{label}</span><i>{glyph}</i></div><strong>{String(value).padStart(2,'0')}</strong><div className="metric-note"><span/> {note}</div></div>}
+function PipelineIcon({name}:{name:string}){const path:Record<string,React.ReactNode>={download:<path d="M12 3v11m0 0 4-4m-4 4-4-4M5 18h14v3H5z"/>,nodes:<><circle cx="6" cy="6" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="12" cy="18" r="2"/><path d="m8 7 3 9m5-9-3 9M8 6h8"/></>,brain:<><path d="M9 4a3 3 0 0 0-3 3v1a3 3 0 0 0-1 5 3 3 0 0 0 4 4"/><path d="M15 4a3 3 0 0 1 3 3v1a3 3 0 0 1 1 5 3 3 0 0 1-4 4M12 3v18M9 9h3M12 15h3"/></>,search:<><circle cx="10" cy="10" r="6"/><path d="m15 15 5 5"/></>,user:<><circle cx="12" cy="8" r="4"/><path d="M5 21a7 7 0 0 1 14 0m-3-7 2 2 4-4"/></>,shield:<><path d="M12 3 4 6v6c0 5 3 8 8 10 5-2 8-5 8-10V6z"/><path d="m9 12 2 2 4-4"/></>};return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">{path[name]}</svg>}
+function Metric({label,value,accent,note,glyph}:{label:string;value:number;accent:string;note:string;glyph:string}){return <div className="metric-card" style={{'--metric-accent':accent} as CSSProperties}><div className="metric-top"><span>{label}</span><i>{glyph}</i></div><div className="metric-value"><strong>{String(value).padStart(2,'0')}</strong><svg viewBox="0 0 100 32" preserveAspectRatio="none"><path d="M1 27 15 23 27 25 41 14 54 18 68 8 82 12 99 3"/></svg></div><div className="metric-note"><span/> {note}</div></div>}
 function Capability({value,label,detail}:{value:string;label:string;detail:string}){return <div className="capability"><strong>{value}</strong><div><b>{label}</b><span>{detail}</span></div><i>VERIFIED</i></div>}
 function IncidentRow({incident}:{incident:Incident}){return <Link to={`/incidents/${incident.id}`} className="incident-row"><span className="severity-line" style={{background:severityColor(incident.severity)}}/><div className="incident-icon">!</div><div className="incident-main"><b>{incident.alert_name}</b><span>{incident.source} · {incident.id}</span></div><time>{new Date(incident.created_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</time><SeverityBadge severity={incident.severity}/><StatusBadge status={incident.status}/><span className="row-arrow">›</span></Link>}
