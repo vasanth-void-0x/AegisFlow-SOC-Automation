@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type CSSProperties } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../api/client'
 import type { Incident } from '../api/types'
@@ -7,85 +7,35 @@ import { SeverityBadge, severityColor } from '../components/SeverityBadge'
 import { StatusBadge } from '../components/StatusBadge'
 
 export function OverviewPage() {
-  const [incidents, setIncidents] = useState<Incident[] | null>(null)
-  const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    api
-      .listIncidents({ page: 1, page_size: 50 })
-      .then((res) => setIncidents(res.items))
-      .catch((e) => setError(e.message))
-  }, [])
-
-  if (error) return <div className="p-6"><ErrorState message={error} /></div>
-  if (!incidents) return <div className="p-6"><LoadingState label="Loading incidents" /></div>
-
-  const bySeverity = { critical: 0, high: 0, medium: 0, low: 0 }
-  const openStatuses = new Set(['new', 'triaging', 'pending_approval'])
-  let openCount = 0
-  incidents.forEach((i) => {
-    bySeverity[i.severity]++
-    if (openStatuses.has(i.status)) openCount++
-  })
-
-  const recent = incidents.slice(0, 8)
-
-  return (
-    <div className="p-6">
-      <header className="mb-6">
-        <h1 className="text-lg font-semibold">SOC Overview</h1>
-        <p className="text-sm text-[var(--color-ash)]">Live state derived from the incident queue - no synthetic data.</p>
-      </header>
-
-      <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-5">
-        <StatCard label="Open Incidents" value={openCount} accent="var(--color-signal)" />
-        <StatCard label="Critical" value={bySeverity.critical} accent={severityColor('critical')} />
-        <StatCard label="High" value={bySeverity.high} accent={severityColor('high')} />
-        <StatCard label="Medium" value={bySeverity.medium} accent={severityColor('medium')} />
-        <StatCard label="Low" value={bySeverity.low} accent={severityColor('low')} />
-      </div>
-
-      <Panel title="Recent Incidents" action={<Link to="/incidents" className="text-xs text-[var(--color-signal)] hover:underline">View all →</Link>}>
-        {recent.length === 0 ? (
-          <p className="py-6 text-center text-sm text-[var(--color-ash)]">No incidents ingested yet.</p>
-        ) : (
-          <div className="divide-y divide-[var(--color-graphite)]">
-            {recent.map((inc) => (
-              <IncidentRow key={inc.id} incident={inc} />
-            ))}
-          </div>
-        )}
+  const [incidents,setIncidents]=useState<Incident[]|null>(null)
+  const [error,setError]=useState<string|null>(null)
+  useEffect(()=>{api.listIncidents({page:1,page_size:50}).then(r=>setIncidents(r.items)).catch(e=>setError(e.message))},[])
+  if(error)return <div className="page-pad"><ErrorState message={error}/></div>
+  if(!incidents)return <div className="page-pad"><LoadingState label="Synchronizing incident telemetry"/></div>
+  const counts={critical:0,high:0,medium:0,low:0};const open=new Set(['new','triaging','pending_approval']);let openCount=0
+  incidents.forEach(i=>{counts[i.severity]++;if(open.has(i.status))openCount++})
+  const recent=incidents.slice(0,7),total=Math.max(incidents.length,1)
+  return <div className="overview-page page-pad">
+    <section className="page-intro"><div><span className="section-kicker">REAL-TIME SECURITY POSTURE</span><h1>SOC Command Overview</h1><p>Live incident telemetry, triage state and response readiness from the AegisFlow pipeline.</p></div><div className="sync-badge"><span/>Pipeline synchronized</div></section>
+    <section className="metric-grid">
+      <Metric label="Open Incidents" value={openCount} accent="var(--color-signal)" note="Requires analyst attention" glyph="01"/>
+      <Metric label="Critical Threats" value={counts.critical} accent="var(--color-sev-critical)" note={Math.round(counts.critical/total*100)+'% of total volume'} glyph="C"/>
+      <Metric label="High Severity" value={counts.high} accent="var(--color-sev-high)" note={Math.round(counts.high/total*100)+'% of total volume'} glyph="H"/>
+      <Metric label="Medium / Low" value={counts.medium+counts.low} accent="var(--color-sev-medium)" note="Monitored by automation" glyph="M"/>
+    </section>
+    <section className="overview-grid">
+      <Panel title="Live Incident Stream" subtitle={recent.length+' latest security events'} action={<Link to="/incidents" className="panel-link">OPEN QUEUE →</Link>} className="incident-panel">
+        {recent.length===0?<div className="empty-radar"><div className="radar-ring"/><b>No incidents detected</b><span>The pipeline is monitoring incoming sources.</span></div>:<div className="incident-list">{recent.map(i=><IncidentRow key={i.id} incident={i}/>)}</div>}
       </Panel>
-    </div>
-  )
-}
-
-function StatCard({ label, value, accent }: { label: string; value: number; accent: string }) {
-  return (
-    <div className="rounded-lg border border-[var(--color-graphite)] bg-[var(--color-steel)] p-4">
-      <div className="text-2xl font-mono font-semibold" style={{ color: accent }}>
-        {value}
+      <div className="right-stack">
+        <Panel title="Threat Distribution" subtitle="Current severity mix">
+          <div className="distribution-ring" style={{background:`conic-gradient(${severityColor('critical')} 0 ${counts.critical/total*100}%,${severityColor('high')} 0 ${(counts.critical+counts.high)/total*100}%,${severityColor('medium')} 0 ${(counts.critical+counts.high+counts.medium)/total*100}%,${severityColor('low')} 0 100%)`}}><div><b>{incidents.length}</b><span>TOTAL</span></div></div>
+          <div className="legend">{(['critical','high','medium','low'] as const).map(s=><div key={s}><span style={{background:severityColor(s)}}/><label>{s}</label><b>{counts[s]}</b></div>)}</div>
+        </Panel>
+        <Panel title="Automation Pipeline" subtitle="Response workflow status"><div className="pipeline-steps">{['Ingest','Enrich','AI Triage','Approve','Respond'].map((s,n)=><div key={s}><span>{String(n+1).padStart(2,'0')}</span><div><b>{s}</b><small>{n===4?'SIMULATED':'OPERATIONAL'}</small></div></div>)}</div></Panel>
       </div>
-      <div className="mt-1 text-xs text-[var(--color-ash)]">{label}</div>
-    </div>
-  )
+    </section>
+  </div>
 }
-
-function IncidentRow({ incident }: { incident: Incident }) {
-  return (
-    <Link
-      to={`/incidents/${incident.id}`}
-      className="flex items-center gap-3 py-3 pl-3 -ml-3 pr-2 hover:bg-[var(--color-graphite)]/40 rounded transition-colors"
-      style={{ borderLeft: `3px solid ${severityColor(incident.severity)}` }}
-    >
-      <div className="flex-1 min-w-0">
-        <div className="text-sm font-medium truncate">{incident.alert_name}</div>
-        <div className="text-xs text-[var(--color-ash-dim)] font-mono">
-          {incident.id} · {incident.source} · {new Date(incident.created_at).toLocaleString()}
-        </div>
-      </div>
-      <SeverityBadge severity={incident.severity} />
-      <StatusBadge status={incident.status} />
-    </Link>
-  )
-}
+function Metric({label,value,accent,note,glyph}:{label:string;value:number;accent:string;note:string;glyph:string}){return <div className="metric-card" style={{'--metric-accent':accent} as CSSProperties}><div className="metric-top"><span>{label}</span><i>{glyph}</i></div><strong>{String(value).padStart(2,'0')}</strong><div className="metric-note"><span/> {note}</div></div>}
+function IncidentRow({incident}:{incident:Incident}){return <Link to={`/incidents/${incident.id}`} className="incident-row"><span className="severity-line" style={{background:severityColor(incident.severity)}}/><div className="incident-icon">!</div><div className="incident-main"><b>{incident.alert_name}</b><span>{incident.source} · {incident.id}</span></div><time>{new Date(incident.created_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</time><SeverityBadge severity={incident.severity}/><StatusBadge status={incident.status}/><span className="row-arrow">›</span></Link>}

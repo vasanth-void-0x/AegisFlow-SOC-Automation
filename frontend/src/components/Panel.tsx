@@ -5,22 +5,24 @@ export function Panel({
   children,
   className = '',
   action,
+  subtitle,
 }: {
   title?: string
   children: ReactNode
   className?: string
   action?: ReactNode
+  subtitle?: string
 }) {
   return (
-    <div className={`rounded-lg border border-[var(--color-graphite)] bg-[var(--color-steel)] ${className}`}>
+    <section className={`soc-panel ${className}`}>
       {title && (
-        <div className="flex items-center justify-between border-b border-[var(--color-graphite)] px-4 py-3">
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-[var(--color-ash)]">{title}</h2>
+        <div className="panel-heading">
+          <div><h2>{title}</h2>{subtitle && <p>{subtitle}</p>}</div>
           {action}
         </div>
       )}
-      <div className="p-4">{children}</div>
-    </div>
+      <div className="panel-body">{children}</div>
+    </section>
   )
 }
 

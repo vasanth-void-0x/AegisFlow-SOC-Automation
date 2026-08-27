@@ -10,9 +10,9 @@ groq==1.6.0
 pytest==8.3.4
 pytest-asyncio==0.24.0
 
-# --- Added in later phases (kept here so `pip install -r` is a one-shot setup) ---
-chromadb==0.5.23
-sentence-transformers==3.3.1
+# ChromaDB and sentence-transformers are optional local enhancements.
+# The deployable default uses the tested in-memory store and deterministic
+# hashing embeddings, which require no heavyweight model packages.
 
 # NOTE: the MCP server (app/mcp_server/) has its own isolated venv - see
 # backend/requirements-mcp.txt and docs/MCP_SETUP.md. The `mcp` SDK pulls in

@@ -6,6 +6,7 @@ Nothing here should ever contain a real secret - defaults are safe for
 local/demo usage only.
 """
 from functools import lru_cache
+import os
 from typing import List
 
 from pydantic import Field
@@ -22,7 +23,9 @@ class Settings(BaseSettings):
     log_level: str = Field(default="INFO")
 
     # --- Database ---
-    database_url: str = Field(default="sqlite:///./aegisflow.db")
+    database_url: str = Field(
+        default="sqlite:////tmp/aegisflow.db" if os.getenv("VERCEL") else "sqlite:///./aegisflow.db"
+    )
 
     # --- Security ---
     cors_allowed_origins: List[str] = Field(default_factory=lambda: ["http://localhost:5173"])
@@ -40,7 +43,7 @@ class Settings(BaseSettings):
     enrichment_timeout_seconds: float = Field(default=5.0)
 
     # --- RAG ---
-    vector_db_path: str = Field(default="./chroma_data")
+    vector_db_path: str = Field(default="/tmp/chroma_data" if os.getenv("VERCEL") else "./chroma_data")
     embedding_model_name: str = Field(default="sentence-transformers/all-MiniLM-L6-v2")
     rag_relevance_threshold: float = Field(default=0.35)
 
