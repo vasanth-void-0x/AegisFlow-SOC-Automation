@@ -1,5 +1,14 @@
 # AegisFlow — SOC Investigation & Response Automation Platform
 
+[![Live](https://img.shields.io/badge/LIVE-SOC%20DASHBOARD-28d7f2?style=for-the-badge&logo=vercel&logoColor=white)](https://aegisflow-soc-automation.vercel.app/)
+[![React](https://img.shields.io/badge/React-TypeScript-087ea4?style=flat-square&logo=react)](frontend/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-Backend-009688?style=flat-square&logo=fastapi)](backend/)
+[![Tests](https://img.shields.io/badge/Backend%20Tests-110%20Passing-3ecf8e?style=flat-square)](#testing)
+
+### [Launch the live SOC dashboard →](https://aegisflow-soc-automation.vercel.app/)
+
+![AegisFlow SOC Command Center](docs/screenshots/aegisflow-command-center.jpg)
+
 AegisFlow is a working, end-to-end SOC (Security Operations Center) automation platform. It ingests
 security alerts, enriches indicators of compromise, runs structured LLM-based triage, retrieves relevant
 SOC runbooks with RAG, exposes its security tools through MCP, orchestrates the investigation with n8n,
@@ -8,6 +17,10 @@ and requires human approval before any response action executes.
 **This is a real system, not a demo with static values.** Every screen in the dashboard is backed by a
 live API call. Where a paid provider (Groq, VirusTotal) isn't configured, the system falls back to
 clearly-labeled demo/fallback behavior instead of pretending to have data it doesn't.
+
+The desktop-first command center uses fixed navigation and response rails, a live processor topology,
+animated circuit telemetry, health monitoring, incident investigation views, approval controls, and
+evidence-linked SOC automation workflows.
 
 ## Project status
 
@@ -238,14 +251,15 @@ See [evaluation/eval_report.md](evaluation/eval_report.md) for the latest run.
 
 ## Screenshots
 
-_Add screenshots here after running the dashboard locally:_
+### SOC Command Center
 
-- [ ] SOC Overview page
-- [ ] Incident Queue with filters applied
-- [ ] Incident Detail — AI Investigation tab showing a triage result
-- [ ] Incident Detail — IOC Enrichment tab
-- [ ] Approval Centre with a pending proposal
-- [ ] MCP Tool History
+![AegisFlow live SOC overview](docs/screenshots/aegisflow-command-center.jpg)
+
+The live overview presents the SIEM → enrichment → AI triage → investigation → approval → response
+pipeline alongside system readiness, incident telemetry, MCP/RAG integrations, and fixed SOC rails.
+
+> The interface is optimized for desktop security operations. Live provider features depend on the
+> environment variables documented above; response actions remain intentionally simulated.
 
 ## License
 
