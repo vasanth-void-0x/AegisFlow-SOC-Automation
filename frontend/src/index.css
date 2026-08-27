@@ -160,7 +160,7 @@ body{background-image:none!important}
 
 /* Matched fixed rails: navigation and response automation share the same
    208px footprint while only the center investigation canvas scrolls. */
-.right-rail-brand{display:none}
+.right-rail-brand,.right-rail-automation{display:none}
 .brand-mark.crystal-v{overflow:visible;clip-path:none;border:0;background:transparent;box-shadow:none;filter:none}
 .brand-mark.crystal-v img{display:block;width:46px;height:46px;object-fit:contain;filter:drop-shadow(0 0 8px #27dfff8c)}
 .sidebar-automation{display:flex;align-items:center;gap:9px;margin:auto 12px 10px;padding:12px 10px;border:1px solid #15526b;border-radius:7px;background:#03101978;backdrop-filter:blur(7px);box-shadow:inset 0 0 18px #28d7f20a}
@@ -171,7 +171,8 @@ body{background-image:none!important}
   .overview-page .command-layout{grid-template-columns:minmax(0,1fr)}
   .overview-page .response-rail{position:fixed;z-index:40;inset:0 0 0 auto;width:208px;height:100vh;display:flex;flex-direction:column;gap:10px;padding:10px 9px 12px;overflow-y:auto;overflow-x:hidden;background:transparent;border-left:1px solid #173149;scrollbar-width:none}
   .overview-page .response-rail::-webkit-scrollbar{display:none}
-  .right-rail-brand{display:flex;align-items:center;gap:7px;flex:0 0 56px;padding:3px 6px 7px;border-bottom:1px solid #173149;background:#0006}
+  .right-rail-automation{display:flex;align-items:center;gap:7px;flex:0 0 56px;padding:7px 6px;border:1px solid #15526b;border-radius:7px;background:#03101978;backdrop-filter:blur(7px)}
+  .right-rail-automation>div:nth-child(2){min-width:0;flex:1}.right-rail-automation b{display:block;color:#bfffea;font:700 7px var(--font-mono);letter-spacing:.35px}.right-rail-automation small{display:block;margin-top:3px;color:#607d8e;font-size:5px}.right-rail-automation em{color:var(--color-ok);font:700 5px var(--font-mono);font-style:normal}
   .right-rail-brand img{width:48px;height:48px;object-fit:contain;mix-blend-mode:screen;filter:drop-shadow(0 0 7px #28d7f266)}
   .right-rail-brand b{display:block;font:700 10px var(--font-mono);letter-spacing:.8px;color:#e6faff}.right-rail-brand b span{color:var(--color-signal)}
   .right-rail-brand small{display:block;margin-top:3px;font:500 5px var(--font-mono);letter-spacing:1px;color:#617e90}

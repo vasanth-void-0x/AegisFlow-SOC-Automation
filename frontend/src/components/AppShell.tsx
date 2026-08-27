@@ -49,7 +49,10 @@ export function AppShell() {
       <div className="brand-lockup"><div className="brand-mark crystal-v"><img src="/aegisflow-crystal-v.png" alt="AegisFlow crystal V"/></div><div><div className="brand-name">AEGIS<span>FLOW</span></div><div className="brand-caption">SOC AUTOMATION</div></div></div>
       <div className="nav-label">OPERATIONS</div>
       <nav className="sidebar-nav">{NAV_ITEMS.map(item=><NavLink key={item.to} to={item.to} end={item.end} onClick={()=>setMobileNavOpen(false)} className={({isActive})=>`nav-item ${isActive?'active':''}`}><Icon name={item.icon}/><span>{item.label}</span><span className="nav-chevron">›</span></NavLink>)}</nav>
-      <div className="sidebar-automation"><div className="automation-orb"><span/></div><div><b>AUTOMATION ACTIVE</b><small>6-stage response workflow</small></div><em>LIVE</em></div>
+      <div className="v-sticker" aria-label="V Security Automation">
+        <img src="/v-wings-sticker.png" alt="Blue V with white wings"/>
+        <div><b>V</b><span>SECURITY AUTOMATION</span></div>
+      </div>
       <div className="sidebar-status"><div className="status-row"><span className={`status-orb ${healthError?'offline':''}`}/><div><b>{healthLabel}</b><small>{health?health.environment+' environment':'Connecting to core'}</small></div></div><div className="status-meta"><span>SECURITY CORE</span><b>{healthError?'OFFLINE':'ACTIVE'}</b></div></div>
     </aside>
     <main className="workspace"><div className="ambient-grid" aria-hidden="true"/><header className="command-bar"><div><span className="eyebrow">SOC OPERATIONS /</span><strong>{currentTitle}</strong></div><div className="command-actions"><span className="utc-clock">LIVE TELEMETRY</span><span className="live-dot"/><div className="operator-avatar">VK</div></div></header><div className="workspace-content"><Outlet/></div></main>
