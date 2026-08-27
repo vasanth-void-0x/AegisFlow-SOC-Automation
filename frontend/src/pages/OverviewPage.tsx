@@ -36,6 +36,7 @@ export function OverviewPage() {
         </Panel>
       </div>
       <aside className="response-rail">
+        <div className="right-rail-brand"><img src="/v-wings-sticker.png" alt="AegisFlow V automation emblem"/><div><b>AEGIS<span>FLOW</span></b><small>RESPONSE AUTOMATION</small></div></div>
         <Panel title="AegisFlow Response Pipeline" subtitle="Investigation workflow">
           <div className="response-pipeline">{PIPELINE.map(([n,name,detail,status,icon],idx)=><div className="response-step" key={n}><div className="step-node"><PipelineIcon name={icon}/><em>{n}</em></div>{idx<PIPELINE.length-1&&<span className="step-line"/>}<div className="step-copy"><b>{name}</b><small>{detail}</small></div><i className={status==='GATED'?'gated':''}>{status}</i></div>)}</div>
           <div className="readiness"><div><span>PIPELINE READINESS</span><b>92%</b></div><div className="readiness-bar"><i/><i/><i/><i/><i/><i/><i/><i/><i/><span/></div></div>
