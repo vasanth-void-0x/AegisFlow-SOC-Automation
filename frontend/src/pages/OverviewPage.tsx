@@ -28,13 +28,8 @@ export function OverviewPage() {
   return <div className="overview-page page-pad">
     <section className="page-intro"><div><span className="section-kicker">REAL-TIME VISIBILITY · INTELLIGENT AUTOMATION · RAPID RESPONSE</span><h1>SOC Command Center</h1><p>AegisFlow investigation and response automation platform.</p></div><div className="sync-badge"><span/>Automation active</div></section>
 
-    <section className="command-layout">
-      <div className="command-main">
-        <ArchitectureCore/>
-        <Panel title="Live Incident Stream" subtitle={recent.length+' latest security events'} action={<Link to="/incidents" className="panel-link">VIEW ALL →</Link>} className="incident-panel">
-          {recent.length===0?<div className="empty-radar"><div className="radar-visual"><span/><i/><b/></div><strong>Monitoring all configured sources</strong><p>No active incidents. AegisFlow is ready to ingest SIEM, EDR or webhook alerts.</p><Link to="/health">VIEW SYSTEM READINESS →</Link></div>:<div className="incident-list">{recent.map(i=><IncidentRow key={i.id} incident={i}/>)}</div>}
-        </Panel>
-      </div>
+    <section className="command-layout layered-command">
+      <ArchitectureCore/>
       <aside className="response-rail">
         <Panel title="AegisFlow Response Pipeline" subtitle="Investigation workflow">
           <div className="response-pipeline">{PIPELINE.map(([n,name,detail,status,icon],idx)=><div className="response-step" key={n}><div className="step-node"><PipelineIcon name={icon}/><em>{n}</em></div>{idx<PIPELINE.length-1&&<span className="step-line"/>}<div className="step-copy"><b>{name}</b><small>{detail}</small></div><i className={status==='GATED'?'gated':''}>{status}</i></div>)}</div>
@@ -45,6 +40,10 @@ export function OverviewPage() {
         </Panel>
       </aside>
     </section>
+
+    <Panel title="Live Incident Stream" subtitle={recent.length+' latest security events'} action={<Link to="/incidents" className="panel-link">VIEW ALL →</Link>} className="incident-panel overview-incidents">
+      {recent.length===0?<div className="empty-radar"><div className="radar-visual"><span/><i/><b/></div><strong>Monitoring all configured sources</strong><p>No active incidents. AegisFlow is ready to ingest SIEM, EDR or webhook alerts.</p><Link to="/health">VIEW SYSTEM READINESS →</Link></div>:<div className="incident-list">{recent.map(i=><IncidentRow key={i.id} incident={i}/>)}</div>}
+    </Panel>
 
     <section className="metric-grid lower-metrics">
       <Metric label="Open Incidents" value={openCount} accent="var(--color-signal)" note="Requires analyst attention" glyph="01"/>

@@ -128,8 +128,24 @@ body{background-image:none!important}
 .architecture-core{isolation:isolate;width:100%;height:390px;border:0;border-radius:0;background-color:#000;background-image:url('/aegisflow-architecture-hero.png');background-repeat:no-repeat;background-position:50% 50%;background-size:contain;box-shadow:none;transform:none}
 .architecture-core:hover{filter:brightness(1.04)}
 .hero-live{right:7px;top:7px;background:#0009}
+
+/* Layered command scene: the architecture is the stable ground plane while
+   operational rails render independently above it, like the RAGExploit HUD. */
+@media(min-width:1201px){
+  .layered-command{position:relative;display:block;min-height:390px;margin-bottom:14px}
+  .layered-command>.architecture-core{z-index:1;width:calc(100% - 306px);height:390px;background-position:50% 50%;background-size:contain}
+  .layered-command>.response-rail{position:absolute;z-index:4;top:0;right:0;width:292px}
+  .layered-command>.response-rail .soc-panel{background:#020b12e6;backdrop-filter:blur(14px);box-shadow:0 18px 45px #0009}
+  .overview-incidents,.overview-page>.lower-metrics,.overview-page>.capability-strip{width:calc(100% - 306px)}
+}
+@media(min-width:761px) and (max-width:1200px){
+  .layered-command{display:grid;grid-template-columns:1fr;gap:14px}
+  .layered-command>.response-rail{position:static;grid-template-columns:1fr 1fr}
+}
 @media(max-width:760px){
   body{width:100%;min-height:100vh}
+  .layered-command{display:block}
+  .layered-command>.response-rail{margin-top:14px}
   .architecture-core{height:300px;border:0;border-radius:0;background-color:#000;background-size:contain}
 }
 
