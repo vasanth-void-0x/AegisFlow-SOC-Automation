@@ -59,12 +59,12 @@ export function AppShell() {
     <div className="mobile-bar"><button onClick={()=>setMobileNavOpen(true)} aria-label="Open navigation"><Icon name="grid"/></button><span>BLUEORCH</span></div>
     {mobileNavOpen&&<div className="drawer-overlay" onClick={()=>setMobileNavOpen(false)}/>}
     <aside className={`sidebar ${mobileNavOpen?'open':''}`}>
-      <div className="brand-lockup"><div className="brand-mark crystal-v"><img src="/aegisflow-v-core.png" alt="BlueOrch crystal V"/></div><div><div className="brand-name">BLUE<span>ORCH</span></div><div className="brand-caption">SOC AUTOMATION</div></div></div>
+      <div className="brand-lockup"><div className="brand-mark crystal-v"><img src="/aegisflow-v-core.png" alt="BlueOrch crystal V"/></div><div><div className="brand-name"><span>BLUE</span>ORCH</div><div className="brand-caption">SOC AUTOMATION</div></div></div>
       <div className="nav-label">OPERATIONS</div>
       <nav className="sidebar-nav">{NAV_ITEMS.map(item=><NavLink key={item.to} to={item.to} end={item.end} onClick={()=>setMobileNavOpen(false)} className={({isActive})=>`nav-item ${isActive?'active':''}`}><Icon name={item.icon}/><span>{item.label}</span><span className="nav-chevron">›</span></NavLink>)}</nav>
       <div className="v-sticker" aria-label="V Security Automation">
         <img src="/v-wings-sticker.png" alt="Blue V with white wings"/>
-        <div className="v-sticker-wordmark">AEGIS<span>FLOW</span></div>
+        <div className="v-sticker-wordmark"><span>BLUE</span>ORCH</div>
       </div>
       <div className="sidebar-status"><div className="status-row"><span className={`status-orb ${healthError?'offline':''}`}/><div><b>{healthLabel}</b><small>{health?health.environment+' environment':'Connecting to core'}</small></div></div><div className="status-meta"><span>SECURITY CORE</span><b>{healthError?'OFFLINE':'ACTIVE'}</b></div></div>
     </aside>
