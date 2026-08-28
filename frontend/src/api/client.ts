@@ -10,6 +10,12 @@ import type {
   Severity,
   TimelineEvent,
   TriageRecord,
+  DashboardKpis,
+  SiemConnectInput,
+  SiemConnection,
+  SiemProvider,
+  SiemSyncResult,
+  SiemTestResult,
 } from './types'
 
 const BASE = '/api/v1'
@@ -110,6 +116,17 @@ export const api = {
   getMcpToolCalls: (limit = 50) => request<McpToolCallLog[]>(`/audit/mcp-calls?limit=${limit}`),
 
   getAuditTimeline: (limit = 100) => request<TimelineEvent[]>(`/audit/timeline?limit=${limit}`),
+
+  getSiemStatus: () => request<SiemConnection[]>('/siem/status'),
+  testSiem: (body: SiemConnectInput) =>
+    request<SiemTestResult>('/siem/test', { method: 'POST', body: JSON.stringify(body) }),
+  connectSiem: (body: SiemConnectInput) =>
+    request<SiemConnection>('/siem/connect', { method: 'POST', body: JSON.stringify(body) }),
+  disconnectSiem: (provider: SiemProvider) =>
+    request<void>(`/siem/${provider}`, { method: 'DELETE' }),
+  syncSiem: (provider: SiemProvider) =>
+    request<SiemSyncResult>(`/siem/${provider}/sync`, { method: 'POST' }),
+  getDashboardKpis: () => request<DashboardKpis>('/dashboard/kpis'),
 }
 
 export { ApiError }
