@@ -7,6 +7,7 @@ import { ApprovalCentrePage } from './pages/ApprovalCentrePage'
 import { McpToolHistoryPage } from './pages/McpToolHistoryPage'
 import { AuditLogPage } from './pages/AuditLogPage'
 import { SystemHealthPage } from './pages/SystemHealthPage'
+import { SettingsPage } from './pages/SettingsPage'
 
 export default function App() {
   return (
@@ -20,6 +21,7 @@ export default function App() {
           <Route path="/mcp-tools" element={<McpToolHistoryPage />} />
           <Route path="/audit" element={<AuditLogPage />} />
           <Route path="/health" element={<SystemHealthPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
         </Route>
       </Routes>
     </BrowserRouter>
