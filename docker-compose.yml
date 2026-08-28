@@ -25,7 +25,7 @@ services:
     restart: unless-stopped
 
   # MCP server is optional - only needed if an MCP client (Claude Desktop,
-  # n8n's MCP node, etc.) will connect to AegisFlow's security tools.
+  # n8n's MCP node, etc.) will connect to BlueOrch's security tools.
   mcp-server:
     build:
       context: ./backend
