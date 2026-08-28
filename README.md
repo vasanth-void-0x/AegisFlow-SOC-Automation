@@ -1,4 +1,4 @@
-# AegisFlow — SOC Investigation & Response Automation Platform
+# BlueOrch — SOC Investigation & Response Automation Platform
 
 [![Live](https://img.shields.io/badge/LIVE-SOC%20DASHBOARD-28d7f2?style=for-the-badge&logo=vercel&logoColor=white)](https://aegisflow-soc-automation.vercel.app/)
 [![React](https://img.shields.io/badge/React-TypeScript-087ea4?style=flat-square&logo=react)](frontend/)
@@ -7,9 +7,9 @@
 
 ### [Launch the live SOC dashboard →](https://aegisflow-soc-automation.vercel.app/)
 
-![AegisFlow SOC Command Center](docs/screenshots/aegisflow-command-center.jpg)
+![BlueOrch SOC Command Center](docs/screenshots/aegisflow-command-center.jpg)
 
-AegisFlow is a working, end-to-end SOC (Security Operations Center) automation platform. It ingests
+BlueOrch is a working, end-to-end SOC (Security Operations Center) automation platform. It ingests
 security alerts, enriches indicators of compromise, runs structured LLM-based triage, retrieves relevant
 SOC runbooks with RAG, exposes its security tools through MCP, orchestrates the investigation with n8n,
 and requires human approval before any response action executes.
@@ -253,7 +253,7 @@ See [evaluation/eval_report.md](evaluation/eval_report.md) for the latest run.
 
 ### SOC Command Center
 
-![AegisFlow live SOC overview](docs/screenshots/aegisflow-command-center.jpg)
+![BlueOrch live SOC overview](docs/screenshots/aegisflow-command-center.jpg)
 
 The live overview presents the SIEM → enrichment → AI triage → investigation → approval → response
 pipeline alongside system readiness, incident telemetry, MCP/RAG integrations, and fixed SOC rails.
