@@ -1,4 +1,4 @@
-"""Vercel Services entrypoint for the AegisFlow FastAPI API."""
+"""Vercel Services entrypoint for the BlueOrch FastAPI API."""
 
 from app.main import app
 
