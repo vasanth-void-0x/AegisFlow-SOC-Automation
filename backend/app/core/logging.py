@@ -1,4 +1,4 @@
-"""Structured JSON-ish logging configuration for AegisFlow."""
+"""Structured JSON-ish logging configuration for BlueOrch."""
 import logging
 import sys
 
