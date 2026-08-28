@@ -267,11 +267,21 @@ body{background-image:none!important}
 
 /* Compact left navigation; preserve the winged V showcase at its current size */
 @media(min-width:761px){
-  .nav-label{padding:15px 20px 7px;font-size:7px}
-  .sidebar-nav{gap:5px;padding-inline:12px}
-  .nav-item{min-height:37px;padding-inline:10px;gap:9px;border-radius:6px;font-size:11px}
-  .nav-item svg{width:14px;height:14px}
-  .nav-chevron{font-size:16px}
+  .brand-lockup{gap:9px}
+  .brand-mark.crystal-v img{width:52px;height:52px}
+  .brand-name{font-size:15px;letter-spacing:1.2px}
+  .brand-caption{margin-top:2px;font-size:6px;letter-spacing:1.7px}
+  .brand-lockup:after{display:none}
+  .nav-label{padding:10px 18px 5px;font-size:6px}
+  .sidebar-nav{gap:3px;padding-inline:12px}
+  .nav-item{min-height:31px;padding-inline:9px;gap:8px;border-radius:5px;font-size:9.5px}
+  .nav-item svg{width:12px;height:12px}
+  .nav-chevron{font-size:14px}
   .v-sticker{min-height:142px}
   .v-sticker img{height:124px}
+  .sidebar-status{margin:0 12px 10px;padding:9px 10px}
+  .status-row{gap:7px}
+  .status-row b{font-size:8px}
+  .status-row small{margin-top:2px;font-size:6px}
+  .status-meta{margin:7px -6px -4px;padding:6px 6px 1px;font-size:5.5px}
 }
