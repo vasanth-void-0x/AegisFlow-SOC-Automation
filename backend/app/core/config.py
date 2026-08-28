@@ -17,7 +17,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
     # --- App ---
-    app_name: str = "AegisFlow"
+    app_name: str = "BlueOrch"
     environment: str = Field(default="development")  # development | production
     demo_mode: bool = Field(default=False)
     log_level: str = Field(default="INFO")
