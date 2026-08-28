@@ -1,4 +1,4 @@
-# AegisFlow n8n Orchestration
+# BlueOrch n8n Orchestration
 
 Two workflows:
 
@@ -14,7 +14,7 @@ Two workflows:
 
 1. In n8n: **Workflows -> Import from File** -> select `aegisflow-error-handler.json` first (so the main workflow can reference it), then `aegisflow-workflow.json`.
 2. Open the main workflow's **Settings** and confirm "Error Workflow" points at
-   "AegisFlow - Error Handler".
+   "BlueOrch - Error Handler".
 
 ## Required environment variable
 
@@ -68,5 +68,5 @@ timeout and retry behavior on the backend side.
   placeholders - wire them to Slack/Jira/PagerDuty/etc. in your own n8n
   instance; this keeps the importable JSON free of environment-specific
   credentials.
-- This workflow assumes the AegisFlow backend is reachable at
+- This workflow assumes the BlueOrch backend is reachable at
   `AEGISFLOW_API_BASE`. It does not manage backend deployment itself.
