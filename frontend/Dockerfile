@@ -1,4 +1,4 @@
-# AegisFlow Frontend - React + Vite, served by nginx
+# BlueOrch Frontend - React + Vite, served by nginx
 FROM node:20-slim AS build
 
 WORKDIR /app
