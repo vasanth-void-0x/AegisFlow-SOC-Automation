@@ -20,7 +20,7 @@ export function OverviewPage() {
   if(!incidents||!kpis)return <div className="page-pad"><LoadingState label="Synchronizing incident telemetry"/></div>
   const recent=incidents.slice(0,7),total=Math.max(kpis.total_alerts,1)
   return <div className="overview-page page-pad">
-    <section className="page-intro overview-intro"><div><span className="section-kicker">REAL-TIME VISIBILITY · INTELLIGENT AUTOMATION · RAPID RESPONSE</span><h1 className="overview-title">SOC AUTOMATION CENTER</h1><p>AegisFlow investigation and response automation platform.</p></div><SiemHeaderSignal kpis={kpis}/></section>
+    <section className="page-intro overview-intro"><div><span className="section-kicker">REAL-TIME VISIBILITY · INTELLIGENT AUTOMATION · RAPID RESPONSE</span><h1 className="overview-title">SOC AUTOMATION CENTER</h1><p>BlueOrch investigation and response automation platform.</p></div><SiemHeaderSignal kpis={kpis}/></section>
 
     <section className="command-layout command-layout-wide">
       <div className="command-main">
@@ -39,7 +39,7 @@ export function OverviewPage() {
         </section>
       </div>
     </section>
-    <section className="capability-strip" aria-label="AegisFlow engineering coverage">
+    <section className="capability-strip" aria-label="BlueOrch engineering coverage">
       <Capability value="11" label="AUTOMATION PHASES" detail="End-to-end SOC workflow"/><Capability value="07" label="MCP SECURITY TOOLS" detail="Typed and audit logged"/><Capability value="06" label="RAG RUNBOOKS" detail="Evidence-linked guidance"/><Capability value="110" label="TEST SCENARIOS" detail="Backend security coverage"/>
     </section>
     <footer className="overview-footer">
@@ -49,7 +49,7 @@ export function OverviewPage() {
         <a href="https://www.linkedin.com/in/vasanth-2k4" target="_blank" rel="noreferrer" aria-label="LinkedIn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 8.2H3.2V21h3.3V8.2ZM4.85 3A1.92 1.92 0 1 0 4.8 6.84 1.92 1.92 0 0 0 4.85 3ZM21 13.66c0-3.85-2.05-5.64-4.79-5.64a4.14 4.14 0 0 0-3.77 2.07V8.2H9.12V21h3.32v-6.34c0-1.67.32-3.29 2.39-3.29 2.04 0 2.07 1.91 2.07 3.4V21H21v-7.34Z"/></svg><span>LinkedIn</span></a>
         <a href="https://vasanth-portfolio-ten.vercel.app/" target="_blank" rel="noreferrer" aria-label="Portfolio"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none"/><path d="M3 12h18M12 3c2.4 2.5 3.7 5.5 3.7 9S14.4 18.5 12 21M12 3C9.6 5.5 8.3 8.5 8.3 12s1.3 6.5 3.7 9" fill="none"/></svg><span>Portfolio</span></a>
       </nav>
-      <i className="footer-version">AEGISFLOW v1.0.0</i>
+      <i className="footer-version">BLUEORCH v1.0.0</i>
     </footer>
     {incidentsExpanded?<IncidentOverlay incidents={incidents} onClose={()=>setIncidentsExpanded(false)}/>:null}
   </div>
@@ -62,7 +62,7 @@ function IncidentOverlay({incidents,onClose}:{incidents:Incident[];onClose:()=>v
 function SiemHeaderSignal({kpis}:{kpis:DashboardKpis}){const online=kpis.connection_status==='connected';return <Link to="/settings" className={`siem-header-signal ${online?'online':''}`}><span/><div><b>{online?`${kpis.provider?.toUpperCase()} CONNECTED`:'SIEM OFFLINE'}</b><small>{online?(kpis.last_synced_at?`Synced ${new Date(kpis.last_synced_at).toLocaleTimeString()}`:'Ready for first sync'):'Connect a telemetry source'}</small></div><em>SETTINGS →</em></Link>}
 
 function ArchitectureCore({approvals}:{approvals:ResponseProposal[]}){
-  return <section className="architecture-core hero-spacer" aria-label="AegisFlow architecture: SIEM, IOC, RAG, MCP and SOAR connected to the SOC automation core"><div className="hero-live"><span/>LIVE ARCHITECTURE</div><HumanApprovalCard approvals={approvals}/></section>
+  return <section className="architecture-core hero-spacer" aria-label="BlueOrch architecture: SIEM, IOC, RAG, MCP and SOAR connected to the SOC automation core"><div className="hero-live"><span/>LIVE ARCHITECTURE</div><div className="hero-product-name" aria-label="BlueOrch SOC Automation Core"><b>BLUE<span>ORCH</span></b><small>SOC AUTOMATION CORE</small></div><HumanApprovalCard approvals={approvals}/></section>
 }
 function MetricIcon({name}:{name:string}){const paths:Record<string,React.ReactNode>={incident:<><path d="M4 20V9l8-5 8 5v11"/><path d="M8 20v-6h8v6M12 7v3"/></>,critical:<><path d="M12 3 2.8 20h18.4L12 3Z"/><path d="M12 9v5M12 17h.01"/></>,threat:<><circle cx="12" cy="12" r="8"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4M9 12h6"/></>,shield:<><path d="M12 3 4 6v6c0 5 3 8 8 10 5-2 8-5 8-10V6z"/><path d="m9 12 2 2 4-4"/></>};return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">{paths[name]}</svg>}
 function Metric({label,value,accent,note,icon}:{label:string;value:number;accent:string;note:string;icon:string}){return <div className="metric-card" style={{'--metric-accent':accent} as CSSProperties}><div className="metric-top"><span>{label}</span><i><MetricIcon name={icon}/></i></div><div className="metric-value"><strong>{String(value).padStart(2,'0')}</strong><svg viewBox="0 0 100 32" preserveAspectRatio="none"><path d="M1 27 15 23 27 25 41 14 54 18 68 8 82 12 99 3"/></svg></div><div className="metric-note"><span/> {note}</div></div>}
