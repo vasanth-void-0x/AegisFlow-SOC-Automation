@@ -15,11 +15,13 @@ def test_splunk_token_is_required(client):
 def test_wazuh_credentials_are_required(client):
     assert client.post("/api/v1/siem/test", json={"provider": "wazuh", "base_url": "https://wazuh.example:55000"}).status_code == 422
 
+@patch("app.api.siem.sync", new_callable=AsyncMock)
 @patch("app.services.siem_service.make_client")
-def test_connect_and_status_never_expose_secret(make_client, client):
+def test_connect_and_status_never_expose_secret(make_client, sync_mock, client):
     make_client.return_value.test = AsyncMock(return_value=None)
     response = client.post("/api/v1/siem/connect", json=SPLUNK)
     assert response.status_code == 200
+    sync_mock.assert_awaited_once()
     assert response.json()["connected"] is True
     status = client.get("/api/v1/siem/status").json()[0]
     assert "token" not in status and "encrypted_credentials" not in status
