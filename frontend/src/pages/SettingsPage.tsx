@@ -128,11 +128,11 @@ function DirectLogSetup() {
       <div className="summary-signal"><span/><div><small>24/7 COLLECTOR SIGNAL</small><b>AGENT OFFLINE</b><p>No live device connected yet</p></div></div>
       <div className="direct-pipeline">
         <span><i>01</i><b>Collect Continuously</b><small>Background agent watches device logs</small></span>
-        <span><i>02</i><b>Send Securely</b><small>Encrypted batches with offline retry</small></span>
-        <span><i>03</i><b>Detect Threats</b><small>Rules filter suspicious activity</small></span>
+        <span><i>02</i><b>Send Securely</b><small>HTTPS with optional collector API key</small></span>
+        <span><i>03</i><b>Normalize Events</b><small>Infer severity, extract IPs and deduplicate</small></span>
         <span><i>04</i><b>AI Investigation</b><small>Create incidents and request approval</small></span>
       </div>
-      <div className="direct-security-note"><b>RAW LOG SAFETY</b><p>Raw telemetry is parsed and filtered first. Only suspicious events continue to AI investigation.</p></div>
+      <div className="direct-security-note"><b>RAW LOG SAFETY</b><p>Telemetry is validated, size-limited, normalized and stored as canonical incident evidence.</p></div>
       <p className="credential-note">The dashboard does not need to stay open. Incoming events create normalized incidents and update dashboard KPIs through the backend.</p>
     </aside>
   </div>
