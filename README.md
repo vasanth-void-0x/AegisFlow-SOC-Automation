@@ -3,16 +3,17 @@
 [![Live](https://img.shields.io/badge/LIVE-SOC%20DASHBOARD-28d7f2?style=for-the-badge&logo=vercel&logoColor=white)](https://aegisflow-soc-automation.vercel.app/)
 [![React](https://img.shields.io/badge/React-TypeScript-087ea4?style=flat-square&logo=react)](frontend/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-Backend-009688?style=flat-square&logo=fastapi)](backend/)
-[![Tests](https://img.shields.io/badge/Backend%20Tests-110%20Passing-3ecf8e?style=flat-square)](#testing)
+[![Tests](https://img.shields.io/badge/Backend%20Tests-119%20Passing-3ecf8e?style=flat-square)](#testing)
 
 ### [Launch the live SOC dashboard →](https://aegisflow-soc-automation.vercel.app/)
 
-![BlueOrch SOC Command Center](docs/screenshots/aegisflow-command-center.jpg)
+![BlueOrch SOC Command Center](docs/screenshots/blueorch-command-overview.jpg)
 
 BlueOrch is a working, end-to-end SOC (Security Operations Center) automation platform. It ingests
-security alerts, enriches indicators of compromise, runs structured LLM-based triage, retrieves relevant
+alerts from Splunk/Wazuh or receives endpoint logs directly through an agent, webhook, syslog relay, or
+file pipeline. It normalizes events, enriches indicators of compromise, runs structured LLM-based triage, retrieves relevant
 SOC runbooks with RAG, exposes its security tools through MCP, orchestrates the investigation with n8n,
-and requires human approval before any response action executes.
+requires human approval before any response action executes, and produces an evidence-linked final report.
 
 **This is a real system, not a demo with static values.** Every screen in the dashboard is backed by a
 live API call. Where a paid provider (Groq, VirusTotal) isn't configured, the system falls back to
@@ -37,15 +38,22 @@ evidence-linked SOC automation workflows.
 | 9 | Security tests | ✅ |
 | 10 | AI evaluation | ✅ |
 | 11 | Docker & CI | ✅ (Docker builds are syntax-validated, not build-tested — see [Limitations](#known-limitations--honest-notes)) |
+| 12 | Splunk & Wazuh SIEM connectivity | ✅ |
+| 13 | Direct log normalization, deduplication & bulk ingestion | ✅ |
+| 14 | Windows/Linux 24×7 file-tail collector | ✅ |
+| 15 | Final incident report API | ✅ |
 
-**110 backend tests passing** (95 in the main FastAPI test suite + 15 in the isolated MCP server suite).
+**119 backend tests passing** in the verified combined FastAPI/MCP test suite.
 
 ## Architecture
 
 ```mermaid
 flowchart TB
     subgraph Ingestion
-        A[Alert Source<br/>SIEM/EDR/Webhook] -->|POST /api/v1/alerts| B[FastAPI Backend]
+        A[Splunk / Wazuh] -->|SIEM sync| B[FastAPI Backend]
+        O[Endpoint / Server Logs] --> P[BlueOrch Collector]
+        P -->|POST /api/v1/logs/ingest| B
+        Q[Webhook / Syslog Relay / File] -->|single or bulk logs| B
     end
 
     subgraph Backend["Backend (FastAPI + SQLAlchemy + SQLite)"]
@@ -57,6 +65,7 @@ flowchart TB
         G --> H[Human Approval API]
         H --> I[Simulated Response<br/>block_ip / isolate_host]
         C --> J[Immutable Timeline]
+        J --> R[Final Incident Report]
     end
 
     subgraph MCP["MCP Security Server (isolated process)"]
@@ -80,7 +89,7 @@ flowchart TB
 ## Repository structure
 
 ```text
-aegisflow/
+BlueOrch-SOC-Automation/
 ├── backend/               FastAPI app, MCP server, tests
 │   ├── app/
 │   │   ├── api/            Route handlers
@@ -93,11 +102,12 @@ aegisflow/
 │   │   ├── ai/                 Groq client + triage orchestration
 │   │   ├── rag/                 Chunking, embeddings, vector store, retriever
 │   │   └── mcp_server/           MCP tools, schemas, audit, redaction
-│   ├── tests/                    110 tests
+│   ├── tests/                    119 tests
 │   ├── requirements.txt           Main backend deps
 │   └── requirements-mcp.txt        Isolated MCP server deps (see below)
 ├── frontend/                React + TypeScript + Vite SOC dashboard
 ├── n8n/                      Importable workflow JSON + error handler
+├── collector/                 Dependency-free Windows/Linux 24×7 file-tail agent
 ├── runbooks/                  6 SOC runbooks (Markdown, RAG-indexed)
 ├── evaluation/                  AI eval dataset + runner + report
 ├── sample-data/                   Safe fictional sample alerts
@@ -157,8 +167,30 @@ See [docs/MCP_SETUP.md](docs/MCP_SETUP.md) for connecting an MCP client.
 docker run -it --rm -p 5678:5678 n8nio/n8n
 ```
 
-Then import `n8n/aegisflow-workflow.json` and `n8n/aegisflow-error-handler.json`. See
-[docs/N8N_IMPORT.md](docs/N8N_IMPORT.md).
+Then import `n8n/blueorch-error-handler.json` first and `n8n/blueorch-workflow.json` second.
+Set `BLUEORCH_API_BASE=http://host.docker.internal:8000` when n8n runs in Docker, or
+`http://backend:8000` with Docker Compose. See [n8n/README.md](n8n/README.md).
+
+### 5. Test direct-log ingestion
+
+```bash
+curl -X POST http://localhost:8000/api/v1/logs/ingest \
+  -H "Content-Type: application/json" \
+  -H "X-BlueOrch-Key: $DIRECT_LOG_API_KEY" \
+  -d '{"message":"Failed login brute force from 203.0.113.10 to 10.0.0.5","source_type":"agent","source_name":"windows-lab","event_id":"test-001"}'
+```
+
+Run the included continuous collector against any text log:
+
+```bash
+python collector/blueorch_agent.py \
+  --file /path/to/security.log \
+  --api-url http://localhost:8000 \
+  --api-key "$DIRECT_LOG_API_KEY" \
+  --source-name lab-device
+```
+
+Use `--from-start` to send existing lines or omit it to follow only new events.
 
 ## Environment variables
 
@@ -171,15 +203,15 @@ See [.env.example](.env.example) for the full reference. Everything defaults to 
 | `VIRUSTOTAL_API_KEY` | Live IOC reputation | No — falls back to demo enrichment |
 | `ENABLE_REAL_RESPONSE_ADAPTER` | Enable real (non-simulated) response actions | No — **must stay `false` unless you've implemented and reviewed a real adapter** |
 | `DATABASE_URL` | SQLite by default, Postgres-compatible | No |
+| `DIRECT_LOG_API_KEY` | Protects agent/webhook/bulk log-ingestion endpoints | Recommended for remote collectors |
+| `BLUEORCH_API_BASE` | Backend base URL used by imported n8n workflows | Required in n8n |
+| `SIEM_ENCRYPTION_KEY` | Encrypts stored Splunk/Wazuh credentials | Required when connecting SIEM |
 
 ## Testing
 
 ```bash
 cd backend
-pytest tests/ --ignore=tests/test_mcp_server.py -v   # 95 tests, main venv
-
-# MCP server tests (separate venv):
-pytest tests/test_mcp_server.py -v -o asyncio_mode=auto   # 15 tests, .venv-mcp
+python -m pytest -q   # 119 tests
 ```
 
 Frontend:
@@ -212,10 +244,12 @@ See [evaluation/eval_report.md](evaluation/eval_report.md) for the latest run.
   proposals cannot be re-approved; rejected/expired proposals cannot execute.
 - Oversized payloads / malformed JSON — request size limits and structured 422/413 handling.
 - Rate limiting — per-IP sliding window middleware (configurable, default 120 req/min).
+- Remote direct-log collection — optional `X-BlueOrch-Key` verification, payload limits,
+  normalization, and event-id/fingerprint deduplication.
 
 **Explicitly out of scope for this portfolio build:**
-- Authentication/authorization (no user accounts, RBAC, or API auth — anyone with network access to the
-  API can call it). A production deployment needs an auth layer in front of this.
+- User authentication/authorization and RBAC are not implemented. Direct-log collectors can use an API
+  key, but a production deployment still needs an identity-aware gateway in front of analyst APIs.
 - Multi-tenant isolation.
 - Encryption at rest for the SQLite database.
 - The `ENABLE_REAL_RESPONSE_ADAPTER` flag exists but no real adapter is implemented — response actions
@@ -246,17 +280,43 @@ See [evaluation/eval_report.md](evaluation/eval_report.md) for the latest run.
 | Frontend shows "Backend unreachable" | Backend isn't running on port 8000, or `vite.config.ts`'s proxy target doesn't match. Confirm `curl http://localhost:8000/health` works first. |
 | `sentence-transformers unavailable ... using offline hashing embedding fallback` in logs | Expected if the Hugging Face model hasn't been downloaded yet (needs network) or the package isn't installed. RAG still works via the fallback — see [Known Limitations](#known-limitations--honest-notes). |
 | `pip-audit` / `npm audit` failing CI | These run with `|| true` in CI so they report but don't block merges by default — tighten this once you've triaged existing findings. |
-| n8n workflow can't reach the backend | If running n8n via Docker Compose, use `http://backend:8000` (the service name), not `localhost`, as `AEGISFLOW_API_BASE`. |
+| n8n workflow can't reach the backend | If running n8n via Docker Compose, use `http://backend:8000` (the service name), not `localhost`, as `BLUEORCH_API_BASE`. |
 | `409 Conflict` on alert ingestion | Expected — this is the dedup/idempotency protection working. Check the `X-Existing-Incident-Id` response header for the existing incident. |
+| `401 Invalid collector API key` | Send the same value configured as `DIRECT_LOG_API_KEY` in the `X-BlueOrch-Key` header. |
+
+## End-to-end automation flow
+
+```text
+SIEM or Direct Log → Normalize & Deduplicate → Incident → IOC Enrichment → AI Triage
+→ Human Approval → Simulated Response → Contained → Final Report
+```
+
+The n8n production webhook is `POST /webhook/blueorch-alert`. High/critical recommendations
+create a pending response proposal; only BlueOrch's approval service can execute it. The final
+report is available from `GET /api/v1/incidents/{incident_id}/report`.
 
 ## Screenshots
 
 ### SOC Command Center
 
-![BlueOrch live SOC overview](docs/screenshots/aegisflow-command-center.jpg)
+![BlueOrch live SOC overview](docs/screenshots/blueorch-command-overview.jpg)
 
 The live overview presents the SIEM → enrichment → AI triage → investigation → approval → response
 pipeline alongside system readiness, incident telemetry, MCP/RAG integrations, and fixed SOC rails.
+
+### Security data sources — Splunk and Wazuh
+
+![BlueOrch SIEM settings with Splunk and Wazuh](docs/screenshots/blueorch-settings-siem.jpg)
+
+The Settings workspace supports encrypted Splunk Management API and Wazuh Indexer connections,
+connection testing, TLS verification, index selection, manual synchronization, and a live SIEM signal.
+
+### Direct logs — Windows/Linux collector
+
+![BlueOrch direct log agent setup](docs/screenshots/blueorch-settings-direct-agent.jpg)
+
+The second ingestion mode documents the dependency-free `collector/blueorch_agent.py`, secured HTTPS
+endpoint, source profile, Windows/Linux support, event fingerprinting, and continuous file-tail flow.
 
 > The interface is optimized for desktop security operations. Live provider features depend on the
 > environment variables documented above; response actions remain intentionally simulated.
