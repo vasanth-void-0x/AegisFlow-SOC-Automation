@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     # --- App ---
     app_name: str = "AegisFlow"
     environment: str = Field(default="development")  # development | production
-    demo_mode: bool = Field(default=True)  # ALWAYS default to demo/safe mode
+    demo_mode: bool = Field(default=False)
     log_level: str = Field(default="INFO")
 
     # --- Database ---
@@ -53,6 +53,9 @@ class Settings(BaseSettings):
 
     # --- MCP ---
     mcp_tool_timeout_seconds: float = Field(default=10.0)
+    siem_encryption_key: str = Field(default="")
+    siem_request_timeout_seconds: float = Field(default=15.0)
+    siem_sync_limit: int = Field(default=500)
 
 
 @lru_cache
