@@ -16,7 +16,7 @@ export function McpToolHistoryPage() {
       <header className="mb-6">
         <h1 className="text-lg font-semibold">MCP Tool History</h1>
         <p className="text-sm text-[var(--color-ash)]">
-          Every call made through the AegisFlow MCP security server - allowlisted, timed, and audited.
+          Every call made through the BlueOrch MCP security server - allowlisted, timed, and audited.
         </p>
       </header>
 
