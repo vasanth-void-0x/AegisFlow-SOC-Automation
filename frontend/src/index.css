@@ -271,8 +271,9 @@ body{background-image:none!important}
   .brand-lockup{height:74px;gap:5px;padding:0 10px 0 7px;border-bottom:0;background:none!important}
   .brand-mark.crystal-v{width:56px;height:64px;flex:0 0 56px;align-self:center}
   .brand-mark.crystal-v img{width:56px;height:64px;object-position:center;transform:none}
-  .brand-name{font-size:21px;letter-spacing:.75px;white-space:nowrap}
-  .brand-caption{margin-top:1px;font-size:5.5px;letter-spacing:1.45px}
+  .brand-name{position:relative;font-size:23px;letter-spacing:.35px;white-space:nowrap;animation:brand-glitch 5.5s steps(1,end) infinite}
+  .brand-name:after{content:'';display:block;width:100%;height:1px;margin-top:3px;background:linear-gradient(90deg,transparent 0,#28d7f2 18%,#fff 48%,#28d7f2 72%,transparent 100%);box-shadow:0 0 5px #28d7f2,0 0 11px #28d7f27a;transform-origin:left;animation:spark-scan 2.4s ease-in-out infinite}
+  .brand-caption{margin-top:3px;font-size:5.5px;letter-spacing:1.45px}
   .brand-lockup:after{display:none}
   .nav-label{padding:8px 17px 4px;font-size:5.5px}
   .sidebar-nav{gap:2px;padding-inline:12px}
@@ -287,3 +288,6 @@ body{background-image:none!important}
   .status-row small{margin-top:2px;font-size:6px}
   .status-meta{margin:7px -6px -4px;padding:6px 6px 1px;font-size:5.5px}
 }
+
+@keyframes spark-scan{0%,100%{opacity:.42;transform:scaleX(.28)}45%{opacity:1;transform:scaleX(1)}55%{opacity:.75;transform:scaleX(.82)}}
+@keyframes brand-glitch{0%,88%,92%,100%{transform:translate(0);text-shadow:none}89%{transform:translate(-1px,0);text-shadow:2px 0 #28d7f2,-2px 0 #ff315c}90%{transform:translate(1px,0);text-shadow:-2px 0 #28d7f2,2px 0 #ff315c}91%{transform:translate(0);text-shadow:1px 0 #28d7f2}}
