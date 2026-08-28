@@ -1,7 +1,7 @@
-import { NavLink, Outlet, useLocation } from 'react-router-dom'
+import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { api } from '../api/client'
-import type { HealthStatus } from '../api/types'
+import type { HealthStatus, ResponseProposal } from '../api/types'
 
 const NAV_ITEMS = [
   { to: '/', label: 'Command Overview', end: true, icon: 'grid' },
@@ -44,10 +44,16 @@ export function AppShell() {
   const [health,setHealth]=useState<HealthStatus|null>(null)
   const [healthError,setHealthError]=useState(false)
   const [mobileNavOpen,setMobileNavOpen]=useState(false)
+  const [notificationsOpen,setNotificationsOpen]=useState(false)
+  const [pendingApprovals,setPendingApprovals]=useState<ResponseProposal[]>([])
+  const [actionTab,setActionTab]=useState<'approvals'|'alerts'|'actions'|'system'>('approvals')
+  const [decisionBusy,setDecisionBusy]=useState<string|null>(null)
   const location=useLocation()
   useEffect(()=>{let cancelled=false;const poll=()=>api.health().then(h=>!cancelled&&(setHealth(h),setHealthError(false))).catch(()=>!cancelled&&setHealthError(true));poll();const timer=setInterval(poll,15000);return()=>{cancelled=true;clearInterval(timer)}},[])
+  useEffect(()=>{let cancelled=false;const poll=()=>api.listApprovals({status:'pending'}).then(items=>!cancelled&&setPendingApprovals(items)).catch(()=>undefined);poll();const timer=setInterval(poll,30000);return()=>{cancelled=true;clearInterval(timer)}},[])
   const healthLabel=healthError?'Backend offline':health?.status==='ok'?'All systems operational':'Checking systems'
   const currentTitle=location.pathname.startsWith('/incidents/')?'Incident Investigation':PAGE_TITLES[location.pathname]||'AegisFlow'
+  const decide=async(action:'approve'|'reject',proposal:ResponseProposal)=>{setDecisionBusy(action);try{if(action==='approve')await api.approveProposal(proposal.id,'VK','Approved from AegisFlow Action Center');else await api.rejectProposal(proposal.id,'VK','Rejected from AegisFlow Action Center');setPendingApprovals(items=>items.filter(item=>item.id!==proposal.id))}finally{setDecisionBusy(null)}}
   return <div className="app-frame">
     {location.pathname==='/'&&<div className="aegis-bg-scene" aria-hidden="true"><MatrixRain/><div className="aegis-bg-picture"/><ProcessorNodes/></div>}
     <div className="mobile-bar"><button onClick={()=>setMobileNavOpen(true)} aria-label="Open navigation"><Icon name="grid"/></button><span>AEGISFLOW</span></div>
@@ -62,6 +68,9 @@ export function AppShell() {
       </div>
       <div className="sidebar-status"><div className="status-row"><span className={`status-orb ${healthError?'offline':''}`}/><div><b>{healthLabel}</b><small>{health?health.environment+' environment':'Connecting to core'}</small></div></div><div className="status-meta"><span>SECURITY CORE</span><b>{healthError?'OFFLINE':'ACTIVE'}</b></div></div>
     </aside>
-    <main className="workspace"><div className="ambient-grid" aria-hidden="true"/><header className="command-bar"><div><span className="eyebrow">SOC OPERATIONS /</span><strong>{currentTitle}</strong></div><div className="command-actions"><span className="utc-clock">LIVE TELEMETRY</span><span className="live-dot"/><div className="operator-avatar">VK</div></div></header><div className="workspace-content"><Outlet/></div></main>
+    <main className="workspace"><div className="ambient-grid" aria-hidden="true"/><header className="command-bar"><div><span className="eyebrow">SOC OPERATIONS /</span><strong>{currentTitle}</strong></div><div className="command-actions"><span className="utc-clock">LIVE TELEMETRY</span><span className="live-dot"/><div className="notification-wrap"><button className="notification-button" aria-label={`${pendingApprovals.length} unread notifications`} aria-expanded={notificationsOpen} onClick={()=>setNotificationsOpen(open=>!open)}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg>{pendingApprovals.length>0?<b>{Math.min(pendingApprovals.length,99)}</b>:null}</button></div><div className="operator-avatar" onClick={()=>setNotificationsOpen(open=>!open)}>VK</div></div></header>{notificationsOpen?<aside className="action-center" aria-label="Action Center"><div className="action-center-head"><strong>ACTION CENTER</strong><button aria-label="Close Action Center" onClick={()=>setNotificationsOpen(false)}>×</button></div><div className="action-tabs" role="tablist">{(['approvals','alerts','actions','system'] as const).map(tab=><button role="tab" aria-selected={actionTab===tab} className={actionTab===tab?'active':''} onClick={()=>setActionTab(tab)} key={tab}>{tab.toUpperCase()}</button>)}</div>{actionTab==='approvals'?<ActionApprovals approvals={pendingApprovals} busy={decisionBusy} onDecision={decide} onClose={()=>setNotificationsOpen(false)}/>:null}{actionTab==='alerts'?<ActionMessage title="ALERTS" text="New SIEM alerts will appear here after synchronization." link="/incidents" onClose={()=>setNotificationsOpen(false)}/>:null}{actionTab==='actions'?<ActionMessage title="RESPONSE ACTIONS" text="Approved, executed and failed actions are available in Approval Centre." link="/approvals" onClose={()=>setNotificationsOpen(false)}/>:null}{actionTab==='system'?<ActionMessage title="SYSTEM STATUS" text={healthError?'Backend connection is offline.':'AegisFlow security core is operational.'} link="/health" onClose={()=>setNotificationsOpen(false)}/>:null}</aside>:null}<div className="workspace-content"><Outlet/></div></main>
   </div>
 }
+
+function ActionApprovals({approvals,busy,onDecision,onClose}:{approvals:ResponseProposal[];busy:string|null;onDecision:(action:'approve'|'reject',proposal:ResponseProposal)=>Promise<void>;onClose:()=>void}){const proposal=approvals[0];if(!proposal)return <div className="action-empty"><span>✓</span><b>NO APPROVALS PENDING</b><small>New AI recommendations will appear here.</small></div>;return <div className="action-approval"><span>HUMAN APPROVAL REQUIRED</span><div className="action-risk"><b>{proposal.action_type.replaceAll('_',' ').toUpperCase()}</b><em>CRITICAL</em></div><dl><div><dt>Target</dt><dd>{proposal.target}</dd></div><div><dt>Proposed by</dt><dd>{proposal.proposed_by}</dd></div><div><dt>Request</dt><dd>{proposal.id}</dd></div></dl><p>{proposal.justification}</p><Link to={`/incidents/${proposal.incident_id}`} onClick={onClose}>VIEW EVIDENCE</Link><div><button disabled={busy!==null} onClick={()=>void onDecision('reject',proposal)}>{busy==='reject'?'…':'REJECT'}</button><button disabled={busy!==null} onClick={()=>void onDecision('approve',proposal)}>{busy==='approve'?'…':'APPROVE'}</button></div></div>}
+function ActionMessage({title,text,link,onClose}:{title:string;text:string;link:string;onClose:()=>void}){return <div className="action-message"><b>{title}</b><p>{text}</p><Link to={link} onClick={onClose}>OPEN MODULE →</Link></div>}
