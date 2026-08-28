@@ -1,5 +1,5 @@
 {
-  "name": "AegisFlow - SOC Alert Orchestration",
+  "name": "BlueOrch - SOC Alert Orchestration",
   "nodes": [
     {
       "parameters": {
