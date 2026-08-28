@@ -2,7 +2,7 @@ import { useEffect, useState, type CSSProperties } from 'react'
 import type React from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../api/client'
-import type { Incident } from '../api/types'
+import type { DashboardKpis, Incident } from '../api/types'
 import { Panel, LoadingState, ErrorState } from '../components/Panel'
 import { SeverityBadge, severityColor } from '../components/SeverityBadge'
 import { StatusBadge } from '../components/StatusBadge'
@@ -18,21 +18,20 @@ const PIPELINE = [
 
 export function OverviewPage() {
   const [incidents,setIncidents]=useState<Incident[]|null>(null)
+  const [kpis,setKpis]=useState<DashboardKpis|null>(null)
   const [error,setError]=useState<string|null>(null)
-  useEffect(()=>{api.listIncidents({page:1,page_size:50}).then(r=>setIncidents(r.items)).catch(e=>setError(e.message))},[])
+  useEffect(()=>{Promise.all([api.listIncidents({page:1,page_size:50}),api.getDashboardKpis()]).then(([incidentsResult,kpiResult])=>{setIncidents(incidentsResult.items);setKpis(kpiResult)}).catch(e=>setError(e.message))},[])
   if(error)return <div className="page-pad"><ErrorState message={error}/></div>
-  if(!incidents)return <div className="page-pad"><LoadingState label="Synchronizing incident telemetry"/></div>
-  const counts={critical:0,high:0,medium:0,low:0};const open=new Set(['new','triaging','pending_approval']);let openCount=0
-  incidents.forEach(i=>{counts[i.severity]++;if(open.has(i.status))openCount++})
-  const recent=incidents.slice(0,7),total=Math.max(incidents.length,1)
+  if(!incidents||!kpis)return <div className="page-pad"><LoadingState label="Synchronizing incident telemetry"/></div>
+  const recent=incidents.slice(0,7),total=Math.max(kpis.total_alerts,1)
   return <div className="overview-page page-pad">
-    <section className="page-intro"><div><span className="section-kicker">REAL-TIME VISIBILITY · INTELLIGENT AUTOMATION · RAPID RESPONSE</span><h1>SOC Command Center</h1><p>AegisFlow investigation and response automation platform.</p></div><div className="sync-badge"><span/>Automation active</div></section>
+    <section className="page-intro"><div><span className="section-kicker">REAL-TIME VISIBILITY · INTELLIGENT AUTOMATION · RAPID RESPONSE</span><h1>SOC Command Center</h1><p>AegisFlow investigation and response automation platform.</p></div><SiemHeaderSignal kpis={kpis}/></section>
 
     <section className="command-layout">
       <div className="command-main">
         <ArchitectureCore/>
         <Panel title="Live Incident Stream" subtitle={recent.length+' latest security events'} action={<Link to="/incidents" className="panel-link">VIEW ALL →</Link>} className="incident-panel">
-          {recent.length===0?<div className="empty-radar"><div className="radar-visual"><span/><i/><b/></div><strong>Monitoring all configured sources</strong><p>No active incidents. AegisFlow is ready to ingest SIEM, EDR or webhook alerts.</p><Link to="/health">VIEW SYSTEM READINESS →</Link></div>:<div className="incident-list">{recent.map(i=><IncidentRow key={i.id} incident={i}/>)}</div>}
+          {recent.length===0?<div className="empty-radar"><div className="radar-visual"><span/><i/><b/></div><strong>{kpis.connection_status==='connected'?'SIEM connected — no alerts received':'No SIEM connected'}</strong><p>{kpis.connection_status==='connected'?'Run a sync from Settings to pull real security events.':'Connect Splunk or Wazuh to populate this dashboard with real telemetry.'}</p><Link to="/settings">{kpis.connection_status==='connected'?'OPEN SIEM SETTINGS →':'CONNECT SIEM →'}</Link></div>:<div className="incident-list">{recent.map(i=><IncidentRow key={i.id} incident={i}/>)}</div>}
         </Panel>
       </div>
       <aside className="response-rail">
@@ -42,22 +41,24 @@ export function OverviewPage() {
           <div className="readiness"><div><span>PIPELINE READINESS</span><b>92%</b></div><div className="readiness-bar"><i/><i/><i/><i/><i/><i/><i/><i/><i/><span/></div></div>
         </Panel>
         <Panel title="System Status" subtitle="Core service readiness">
-          <div className="system-list">{['SIEM Connectivity','MCP Orchestrator','SOAR Platform','RAG Service','Threat Intel Feeds','Automation Engine'].map(x=><div key={x}><span>{x}</span><b>HEALTHY</b><i/></div>)}</div>
+          <div className="system-list"><div><span>SIEM Connectivity</span><b>{kpis.connection_status==='connected'?'CONNECTED':'OFFLINE'}</b><i className={kpis.connection_status==='connected'?'':'system-offline'}/></div>{['MCP Orchestrator','SOAR Platform','RAG Service','Threat Intel Feeds','Automation Engine'].map(x=><div key={x}><span>{x}</span><b>HEALTHY</b><i/></div>)}</div>
         </Panel>
       </aside>
     </section>
 
     <section className="metric-grid lower-metrics">
-      <Metric label="Open Incidents" value={openCount} accent="var(--color-signal)" note="Requires analyst attention" icon="incident"/>
-      <Metric label="Critical Threats" value={counts.critical} accent="var(--color-sev-critical)" note={Math.round(counts.critical/total*100)+'% of total volume'} icon="critical"/>
-      <Metric label="High Severity" value={counts.high} accent="var(--color-sev-high)" note={Math.round(counts.high/total*100)+'% of total volume'} icon="threat"/>
-      <Metric label="Medium / Low" value={counts.medium+counts.low} accent="var(--color-sev-medium)" note="Monitored by automation" icon="shield"/>
+      <Metric label="Active Incidents" value={kpis.active_incidents} accent="var(--color-signal)" note="Requires analyst attention" icon="incident"/>
+      <Metric label="Critical Threats" value={kpis.critical_alerts} accent="var(--color-sev-critical)" note={Math.round(kpis.critical_alerts/total*100)+'% of total volume'} icon="critical"/>
+      <Metric label="High Severity" value={kpis.high_alerts} accent="var(--color-sev-high)" note={Math.round(kpis.high_alerts/total*100)+'% of total volume'} icon="threat"/>
+      <Metric label="Contained Threats" value={kpis.contained_threats} accent="var(--color-sev-medium)" note="Response action completed" icon="shield"/>
     </section>
     <section className="capability-strip" aria-label="AegisFlow engineering coverage">
       <Capability value="11" label="AUTOMATION PHASES" detail="End-to-end SOC workflow"/><Capability value="07" label="MCP SECURITY TOOLS" detail="Typed and audit logged"/><Capability value="06" label="RAG RUNBOOKS" detail="Evidence-linked guidance"/><Capability value="110" label="TEST SCENARIOS" detail="Backend security coverage"/>
     </section>
   </div>
 }
+
+function SiemHeaderSignal({kpis}:{kpis:DashboardKpis}){const online=kpis.connection_status==='connected';return <Link to="/settings" className={`siem-header-signal ${online?'online':''}`}><span/><div><b>{online?`${kpis.provider?.toUpperCase()} CONNECTED`:'SIEM OFFLINE'}</b><small>{online?(kpis.last_synced_at?`Synced ${new Date(kpis.last_synced_at).toLocaleTimeString()}`:'Ready for first sync'):'Connect a telemetry source'}</small></div><em>SETTINGS →</em></Link>}
 
 function ArchitectureCore(){
   return <section className="architecture-core hero-spacer" aria-label="AegisFlow architecture: SIEM, IOC, RAG, MCP and SOAR connected to the SOC automation core"><div className="hero-live"><span/>LIVE ARCHITECTURE</div></section>
