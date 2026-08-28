@@ -1,5 +1,5 @@
 """
-AegisFlow MCP Security Server.
+BlueOrch MCP Security Server.
 
 Run standalone (separate venv - see backend/requirements-mcp.txt):
     ./.venv-mcp/bin/python -m app.mcp_server.server
@@ -151,7 +151,7 @@ async def create_response_proposal(
 def main() -> None:
     if settings.database_url.startswith("sqlite"):
         Base.metadata.create_all(bind=engine)
-    logger.info("Starting AegisFlow MCP server with %d allowlisted tools", len(ALLOWED_TOOLS))
+    logger.info("Starting BlueOrch MCP server with %d allowlisted tools", len(ALLOWED_TOOLS))
     mcp.run(transport="stdio")
 
 
