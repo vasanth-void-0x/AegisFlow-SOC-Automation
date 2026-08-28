@@ -264,3 +264,14 @@ body{background-image:none!important}
 @media(min-width:1201px){.overview-page{padding-right:30px}.overview-page .response-rail{display:none}}
 @media(max-width:1050px){.overview-compact-grid{grid-template-columns:1fr}.overview-compact-grid .automation-timeline{grid-template-columns:1fr 1fr}}
 @media(max-width:760px){.compact-kpis{grid-template-columns:1fr 1fr}.action-center{top:52px;width:208px;height:calc(100vh - 52px);background:#020a10f2}.overview-compact-grid .automation-timeline{grid-template-columns:1fr}.incident-overlay{padding:10px}}
+
+/* Compact left navigation; preserve the winged V showcase at its current size */
+@media(min-width:761px){
+  .nav-label{padding:15px 20px 7px;font-size:7px}
+  .sidebar-nav{gap:5px;padding-inline:12px}
+  .nav-item{min-height:37px;padding-inline:10px;gap:9px;border-radius:6px;font-size:11px}
+  .nav-item svg{width:14px;height:14px}
+  .nav-chevron{font-size:16px}
+  .v-sticker{min-height:142px}
+  .v-sticker img{height:124px}
+}
