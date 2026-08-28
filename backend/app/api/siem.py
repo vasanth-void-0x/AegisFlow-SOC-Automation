@@ -17,8 +17,15 @@ async def test_siem(body: SiemConnectRequest):
 
 @router.post("/siem/connect", response_model=SiemConnectionOut)
 async def connect_siem(body: SiemConnectRequest, db: Session = Depends(get_db)):
-    try: return SiemConnectionOut.model_validate(await connect(db, body))
-    except SiemError as exc: raise HTTPException(status_code=502, detail=str(exc)) from exc
+    try:
+        item = await connect(db, body)
+        # A successful connection must immediately populate the real dashboard.
+        # Later syncs remain available through /siem/{provider}/sync.
+        await sync(db, item)
+        db.refresh(item)
+        return SiemConnectionOut.model_validate(item)
+    except SiemError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
 
 @router.get("/siem/status", response_model=list[SiemConnectionOut])
 def status(db: Session = Depends(get_db)):
