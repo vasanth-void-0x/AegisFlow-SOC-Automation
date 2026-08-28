@@ -131,7 +131,7 @@ def main() -> None:
 
 def render_markdown(metrics: dict, results: list[dict], live_llm: bool) -> str:
     lines = [
-        "# AegisFlow AI Triage Evaluation Report",
+        "# BlueOrch AI Triage Evaluation Report",
         "",
         f"Run at: {metrics['run_at']}",
         "",
