@@ -1,4 +1,4 @@
-name: AegisFlow CI
+name: BlueOrch CI
 
 on:
   push:
