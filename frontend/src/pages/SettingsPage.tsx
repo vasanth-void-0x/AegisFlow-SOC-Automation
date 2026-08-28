@@ -100,7 +100,7 @@ function DirectLogSetup() {
 
   return <div className="direct-log-layout">
     <section className="siem-card direct-log-card">
-      <div className="siem-card-head"><div><span className="section-kicker">DIRECT INGESTION</span><h2>24/7 Direct Log Monitoring</h2><p>Install a lightweight collector once. BlueOrch receives live logs continuously—even when this dashboard is closed.</p></div><div className="connection-pill direct-ready"><span/>FRONTEND READY</div></div>
+      <div className="siem-card-head"><div><span className="section-kicker">DIRECT INGESTION</span><h2>24/7 Direct Log Monitoring</h2><p>Run the lightweight BlueOrch collector on Windows or Linux to forward new log events while the dashboard is closed.</p></div><div className="connection-pill direct-ready"><span/>BACKEND READY</div></div>
       <div className="direct-methods" role="tablist" aria-label="Direct log method">
         {methods.map(item => <button type="button" role="tab" aria-selected={method === item.id} className={method === item.id ? 'active' : ''} key={item.id} onClick={() => { setMethod(item.id); setDirectNotice(false) }}><i>{item.icon}</i><b>{item.title}</b><small>{item.detail}</small></button>)}
       </div>
@@ -108,19 +108,19 @@ function DirectLogSetup() {
         <label><span>SOURCE NAME</span><input value={sourceName} onChange={event => setSourceName(event.target.value)} placeholder={method === 'agent' ? 'Example: Office Windows PC' : method === 'webhook' ? 'Example: Defender Alerts' : method === 'syslog' ? 'Example: Branch Firewall' : 'Example: Incident Evidence'} /></label>
         {method === 'agent' ? <>
           <div className="agent-platforms"><label><span>DEVICE OS</span><select defaultValue="windows"><option value="windows">Windows 10 / 11 / Server</option><option value="linux">Linux Server / Workstation</option></select></label><label><span>COLLECTION PROFILE</span><select defaultValue="security"><option value="security">Security Events</option><option value="system">Security + System</option><option value="full">Full Endpoint Telemetry</option></select></label></div>
-          <div className="live-agent-banner"><i><span/></i><div><b>RUNS 24/7 IN THE BACKGROUND</b><p>Starts automatically with the device, queues logs during internet loss, and securely retries when the network returns.</p></div></div>
-          <div className="direct-info-row agent-features"><span><small>TRANSPORT</small><b>ENCRYPTED HTTPS</b></span><span><small>HEARTBEAT</small><b>EVERY 60 SECONDS</b></span><span><small>OFFLINE QUEUE</small><b>AUTOMATIC RETRY</b></span></div>
-          <div className="endpoint-preview"><span>COLLECTOR PACKAGE</span><code>Available after backend activation</code></div>
+          <div className="live-agent-banner"><i><span/></i><div><b>CONTINUOUS FILE-TAIL COLLECTOR</b><p>Watches new log lines, securely forwards each event, and uses stable event IDs to prevent duplicate incidents.</p></div></div>
+          <div className="direct-info-row agent-features"><span><small>TRANSPORT</small><b>ENCRYPTED HTTPS</b></span><span><small>PLATFORMS</small><b>WINDOWS · LINUX</b></span><span><small>DEDUPLICATION</small><b>EVENT ID + HASH</b></span></div>
+          <div className="endpoint-preview"><span>COLLECTOR PACKAGE</span><code>collector/blueorch_agent.py</code></div>
         </> : method === 'webhook' ? <>
           <div className="direct-info-row"><span><small>PAYLOAD FORMAT</small><b>JSON</b></span><span><small>AUTHENTICATION</small><b>HMAC SIGNATURE</b></span><span><small>DELIVERY</small><b>HTTPS POST</b></span></div>
-          <div className="endpoint-preview"><span>INGESTION ENDPOINT</span><code>Generated after backend activation</code></div>
+          <div className="endpoint-preview"><span>INGESTION ENDPOINT</span><code>POST /api/v1/webhooks/logs</code></div>
         </> : method === 'syslog' ? <>
           <div className="form-split"><label><span>TRANSPORT</span><select defaultValue="tls"><option value="tls">TCP + TLS</option><option value="tcp">TCP</option><option value="udp">UDP</option></select></label><label><span>LISTENER PORT</span><input value="6514" readOnly /></label></div>
           <div className="direct-guidance">A lightweight collector will securely forward remote device logs to BlueOrch.</div>
         </> : <>
-          <label className="direct-drop"><input type="file" accept=".log,.json,.csv,.evtx" /><i>↑</i><b>Choose security log file</b><small>LOG, JSON, CSV and EVTX · processing starts after backend activation</small></label>
+          <label className="direct-drop"><input type="file" accept=".log,.json,.csv,.evtx" /><i>↑</i><b>Choose security log file</b><small>LOG, JSON and CSV can be forwarded through the collector or bulk API</small></label>
         </>}
-        {directNotice ? <div className="siem-notice ok">✓<span>Direct source UI saved for review. Backend ingestion endpoint is the next implementation step.</span></div> : null}
+        {directNotice ? <div className="siem-notice ok">✓<span>Source profile ready. Start the collector with this source name to begin live ingestion.</span></div> : null}
         <div className="siem-actions"><button type="button" className="secondary-action" onClick={() => setDirectNotice(false)}>Reset</button><button type="button" className="primary-action" disabled={!sourceName.trim()} onClick={() => setDirectNotice(true)}>Save Source Setup</button></div>
       </div>
     </section>
@@ -133,7 +133,7 @@ function DirectLogSetup() {
         <span><i>04</i><b>AI Investigation</b><small>Create incidents and request approval</small></span>
       </div>
       <div className="direct-security-note"><b>RAW LOG SAFETY</b><p>Raw telemetry is parsed and filtered first. Only suspicious events continue to AI investigation.</p></div>
-      <p className="credential-note">The dashboard does not need to stay open. Status turns ONLINE only after the real device collector sends its first heartbeat.</p>
+      <p className="credential-note">The dashboard does not need to stay open. Incoming events create normalized incidents and update dashboard KPIs through the backend.</p>
     </aside>
   </div>
 }

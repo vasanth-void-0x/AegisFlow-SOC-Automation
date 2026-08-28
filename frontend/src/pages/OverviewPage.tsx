@@ -40,7 +40,7 @@ export function OverviewPage() {
       </div>
     </section>
     <section className="capability-strip" aria-label="BlueOrch engineering coverage">
-      <Capability value="11" label="AUTOMATION PHASES" detail="End-to-end SOC workflow"/><Capability value="07" label="MCP SECURITY TOOLS" detail="Typed and audit logged"/><Capability value="06" label="RAG RUNBOOKS" detail="Evidence-linked guidance"/><Capability value="110" label="TEST SCENARIOS" detail="Backend security coverage"/>
+      <Capability value="11" label="AUTOMATION PHASES" detail="End-to-end SOC workflow"/><Capability value="07" label="MCP SECURITY TOOLS" detail="Typed and audit logged"/><Capability value="06" label="RAG RUNBOOKS" detail="Evidence-linked guidance"/><Capability value="119" label="TEST SCENARIOS" detail="Backend security coverage"/>
     </section>
     <footer className="overview-footer">
       <span className="footer-copy">© 2026 <b>V</b></span>
