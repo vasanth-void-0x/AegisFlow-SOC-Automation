@@ -2,7 +2,7 @@ import { useEffect, useState, type CSSProperties } from 'react'
 import type React from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../api/client'
-import type { DashboardKpis, Incident, TimelineEvent } from '../api/types'
+import type { DashboardKpis, Incident, ResponseProposal, TimelineEvent } from '../api/types'
 import { Panel, LoadingState, ErrorState } from '../components/Panel'
 import { SeverityBadge, severityColor } from '../components/SeverityBadge'
 import { StatusBadge } from '../components/StatusBadge'
@@ -11,9 +11,11 @@ export function OverviewPage() {
   const [incidents,setIncidents]=useState<Incident[]|null>(null)
   const [kpis,setKpis]=useState<DashboardKpis|null>(null)
   const [timeline,setTimeline]=useState<TimelineEvent[]>([])
+  const [pendingApprovals,setPendingApprovals]=useState<ResponseProposal[]>([])
   const [incidentsExpanded,setIncidentsExpanded]=useState(false)
   const [error,setError]=useState<string|null>(null)
   useEffect(()=>{Promise.all([api.listIncidents({page:1,page_size:50}),api.getDashboardKpis(),api.getAuditTimeline(12)]).then(([incidentsResult,kpiResult,timelineResult])=>{setIncidents(incidentsResult.items);setKpis(kpiResult);setTimeline(timelineResult)}).catch(e=>setError(e.message))},[])
+  useEffect(()=>{api.listApprovals({status:'pending'}).then(setPendingApprovals).catch(()=>setPendingApprovals([]))},[])
   if(error)return <div className="page-pad"><ErrorState message={error}/></div>
   if(!incidents||!kpis)return <div className="page-pad"><LoadingState label="Synchronizing incident telemetry"/></div>
   const recent=incidents.slice(0,7),total=Math.max(kpis.total_alerts,1)
@@ -29,6 +31,7 @@ export function OverviewPage() {
           <Metric label="High Severity" value={kpis.high_alerts} accent="var(--color-sev-high)" note={Math.round(kpis.high_alerts/total*100)+'% of total volume'} icon="threat"/>
           <Metric label="Contained Threats" value={kpis.contained_threats} accent="var(--color-sev-medium)" note="Response action completed" icon="shield"/>
         </section>
+        <HumanApprovalCard approvals={pendingApprovals}/>
         <section className="overview-compact-grid">
           <Panel title="Live Incident Stream" subtitle={recent.length+' latest security events'} action={<button className="panel-link expand-button" onClick={()=>setIncidentsExpanded(true)}>EXPAND ↗</button>} className="incident-panel compact-incident-panel">
             {recent.length===0?<div className="compact-empty"><strong>{kpis.connection_status==='connected'?'SIEM connected — no alerts received':'No SIEM connected'}</strong><Link to="/settings">CONNECT SIEM →</Link></div>:<div className="incident-list">{recent.slice(0,4).map(i=><IncidentRow key={i.id} incident={i}/>)}</div>}
@@ -65,4 +68,5 @@ function ArchitectureCore(){
 function MetricIcon({name}:{name:string}){const paths:Record<string,React.ReactNode>={incident:<><path d="M4 20V9l8-5 8 5v11"/><path d="M8 20v-6h8v6M12 7v3"/></>,critical:<><path d="M12 3 2.8 20h18.4L12 3Z"/><path d="M12 9v5M12 17h.01"/></>,threat:<><circle cx="12" cy="12" r="8"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4M9 12h6"/></>,shield:<><path d="M12 3 4 6v6c0 5 3 8 8 10 5-2 8-5 8-10V6z"/><path d="m9 12 2 2 4-4"/></>};return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">{paths[name]}</svg>}
 function Metric({label,value,accent,note,icon}:{label:string;value:number;accent:string;note:string;icon:string}){return <div className="metric-card" style={{'--metric-accent':accent} as CSSProperties}><div className="metric-top"><span>{label}</span><i><MetricIcon name={icon}/></i></div><div className="metric-value"><strong>{String(value).padStart(2,'0')}</strong><svg viewBox="0 0 100 32" preserveAspectRatio="none"><path d="M1 27 15 23 27 25 41 14 54 18 68 8 82 12 99 3"/></svg></div><div className="metric-note"><span/> {note}</div></div>}
 function Capability({value,label,detail}:{value:string;label:string;detail:string}){return <div className="capability"><strong>{value}</strong><div><b>{label}</b><span>{detail}</span></div><i>VERIFIED</i></div>}
+function HumanApprovalCard({approvals}:{approvals:ResponseProposal[]}){const proposal=approvals[0];return <section className={`overview-approval ${proposal?'pending':'clear'}`} aria-label="Human approval status"><div className="approval-shield">{proposal?'!':'✓'}</div><div className="approval-summary"><span>HUMAN APPROVAL</span><b>{proposal?`${approvals.length} ACTION${approvals.length===1?'':'S'} WAITING FOR REVIEW`:'NO APPROVALS PENDING'}</b><small>{proposal?`${proposal.action_type.replaceAll('_',' ').toUpperCase()} · ${proposal.target}`:'AI response actions requiring analyst approval will appear here.'}</small></div>{proposal?<div className="approval-priority"><i/>ANALYST DECISION REQUIRED</div>:<div className="approval-priority safe"><i/>QUEUE CLEAR</div>}<Link to="/approvals" className="approval-open">{proposal?'REVIEW & APPROVE':'OPEN APPROVAL CENTRE'} →</Link></section>}
 function IncidentRow({incident}:{incident:Incident}){return <Link to={`/incidents/${incident.id}`} className="incident-row"><span className="severity-line" style={{background:severityColor(incident.severity)}}/><div className="incident-icon">!</div><div className="incident-main"><b>{incident.alert_name}</b><span>{incident.source} · {incident.id}</span></div><time>{new Date(incident.created_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</time><SeverityBadge severity={incident.severity}/><StatusBadge status={incident.status}/><span className="row-arrow">›</span></Link>}
