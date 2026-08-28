@@ -144,3 +144,54 @@ export interface HealthStatus {
   demo_mode: boolean
   database: string
 }
+
+export type SiemProvider = 'splunk' | 'wazuh'
+
+export interface SiemConnectInput {
+  provider: SiemProvider
+  base_url: string
+  token?: string
+  username?: string
+  password?: string
+  index_name?: string
+  verify_ssl: boolean
+}
+
+export interface SiemConnection {
+  id: string
+  provider: SiemProvider
+  base_url: string
+  index_name: string | null
+  verify_ssl: boolean
+  enabled: boolean
+  connected: boolean
+  last_error: string | null
+  last_checked_at: string | null
+  last_synced_at: string | null
+}
+
+export interface SiemTestResult {
+  provider: SiemProvider
+  connected: boolean
+  message: string
+}
+
+export interface SiemSyncResult {
+  provider: SiemProvider
+  fetched: number
+  created: number
+  duplicates: number
+  failed: number
+  synced_at: string
+}
+
+export interface DashboardKpis {
+  connection_status: 'connected' | 'disconnected' | 'not_configured'
+  provider: SiemProvider | null
+  last_synced_at: string | null
+  total_alerts: number
+  critical_alerts: number
+  high_alerts: number
+  active_incidents: number
+  contained_threats: number
+}

@@ -1,6 +1,7 @@
 import os
 
 os.environ.setdefault("DATABASE_URL", "sqlite:///:memory:")
+os.environ.setdefault("SIEM_ENCRYPTION_KEY", "test-only-key")
 
 import pytest
 from fastapi.testclient import TestClient

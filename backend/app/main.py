@@ -15,6 +15,7 @@ from app.api.health import router as health_router
 from app.api.incidents import router as incidents_router
 from app.api.runbooks import router as runbooks_router
 from app.api.triage import router as triage_router
+from app.api.siem import router as siem_router
 from app.core.config import get_settings
 from app.core.logging import configure_logging, get_logger
 from app.core.rate_limit import RateLimitMiddleware
@@ -88,6 +89,7 @@ def create_app() -> FastAPI:
     app.include_router(runbooks_router, prefix="/api/v1")
     app.include_router(approvals_router, prefix="/api/v1")
     app.include_router(audit_router, prefix="/api/v1")
+    app.include_router(siem_router, prefix="/api/v1")
 
     return app
 
