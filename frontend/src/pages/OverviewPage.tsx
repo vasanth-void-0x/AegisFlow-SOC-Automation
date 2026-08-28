@@ -18,7 +18,7 @@ export function OverviewPage() {
   if(!incidents||!kpis)return <div className="page-pad"><LoadingState label="Synchronizing incident telemetry"/></div>
   const recent=incidents.slice(0,7),total=Math.max(kpis.total_alerts,1)
   return <div className="overview-page page-pad">
-    <section className="page-intro"><div><span className="section-kicker">REAL-TIME VISIBILITY · INTELLIGENT AUTOMATION · RAPID RESPONSE</span><h1 className="overview-title">SOC Auto Center</h1><p>AegisFlow investigation and response automation platform.</p></div><SiemHeaderSignal kpis={kpis}/></section>
+    <section className="page-intro overview-intro"><div><span className="section-kicker">REAL-TIME VISIBILITY · INTELLIGENT AUTOMATION · RAPID RESPONSE</span><h1 className="overview-title">SOC AUTOMATION CENTER</h1><p>AegisFlow investigation and response automation platform.</p></div><SiemHeaderSignal kpis={kpis}/></section>
 
     <section className="command-layout command-layout-wide">
       <div className="command-main">
