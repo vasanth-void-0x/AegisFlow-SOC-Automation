@@ -8,6 +8,7 @@ const INITIAL: SiemConnectInput = {
 }
 
 export function SettingsPage() {
+  const [sourceMode, setSourceMode] = useState<'siem' | 'direct'>('siem')
   const [form, setForm] = useState<SiemConnectInput>(INITIAL)
   const [connections, setConnections] = useState<SiemConnection[] | null>(null)
   const [busy, setBusy] = useState<'test' | 'connect' | 'sync' | 'disconnect' | null>(null)
@@ -51,8 +52,12 @@ export function SettingsPage() {
 
   if (!connections) return <div className="page-pad"><LoadingState label="Loading SIEM configuration" /></div>
   return <div className="page-pad settings-page">
-    <section className="page-intro"><div><span className="section-kicker">REAL TELEMETRY · ENCRYPTED CREDENTIALS · NO DEMO DATA</span><h1>SIEM Connections</h1><p>Connect AegisFlow directly to your security data source.</p></div></section>
-    <div className="siem-layout">
+    <section className="page-intro"><div><span className="section-kicker">REAL TELEMETRY · TWO INGESTION MODES · NO DEMO DATA</span><h1>Security Data Sources</h1><p>Connect an existing SIEM or send endpoint and infrastructure logs directly to AegisFlow.</p></div></section>
+    <nav className="source-mode-switch" aria-label="Log ingestion mode">
+      <button type="button" className={sourceMode === 'siem' ? 'active' : ''} onClick={() => { setSourceMode('siem'); setNotice(null) }}><i>01</i><span><b>SIEM Integration</b><small>Splunk · Wazuh</small></span><em>{connections.some(item => item.connected) ? 'ONLINE' : 'OFFLINE'}</em></button>
+      <button type="button" className={sourceMode === 'direct' ? 'active' : ''} onClick={() => { setSourceMode('direct'); setNotice(null) }}><i>02</i><span><b>Direct Log Source</b><small>Webhook · Syslog · File</small></span><em>SETUP</em></button>
+    </nav>
+    {sourceMode === 'siem' ? <div className="siem-layout">
       <section className="siem-card">
         <div className="siem-card-head"><div><span className="section-kicker">DATA SOURCE</span><h2>Configure SIEM</h2></div><ConnectionSignal connection={connected} /></div>
         <div className="provider-tabs" role="tablist" aria-label="SIEM provider">
@@ -75,7 +80,54 @@ export function SettingsPage() {
         <button className="disconnect-action" disabled={!connected || busy !== null} onClick={() => void disconnect()}>{busy === 'disconnect' ? 'Disconnecting…' : 'Disconnect & Remove Credentials'}</button>
         <p className="credential-note">Credentials are encrypted by the backend and never returned to this browser.</p>
       </aside>
-    </div>
+    </div> : <DirectLogSetup />}
+  </div>
+}
+
+type DirectMethod = 'webhook' | 'syslog' | 'file'
+
+function DirectLogSetup() {
+  const [method, setMethod] = useState<DirectMethod>('webhook')
+  const [sourceName, setSourceName] = useState('')
+  const [directNotice, setDirectNotice] = useState(false)
+  const methods: { id: DirectMethod; icon: string; title: string; detail: string }[] = [
+    { id: 'webhook', icon: '{}', title: 'JSON Webhook', detail: 'Apps · EDR · Cloud alerts' },
+    { id: 'syslog', icon: '>>', title: 'Syslog Stream', detail: 'Linux · Firewall · IDS' },
+    { id: 'file', icon: '↑', title: 'Secure File', detail: '.log · .json · .csv · .evtx' },
+  ]
+
+  return <div className="direct-log-layout">
+    <section className="siem-card direct-log-card">
+      <div className="siem-card-head"><div><span className="section-kicker">DIRECT INGESTION</span><h2>Add Direct Log Source</h2><p>Send raw security telemetry without a separate SIEM.</p></div><div className="connection-pill direct-ready"><span/>FRONTEND READY</div></div>
+      <div className="direct-methods" role="tablist" aria-label="Direct log method">
+        {methods.map(item => <button type="button" role="tab" aria-selected={method === item.id} className={method === item.id ? 'active' : ''} key={item.id} onClick={() => { setMethod(item.id); setDirectNotice(false) }}><i>{item.icon}</i><b>{item.title}</b><small>{item.detail}</small></button>)}
+      </div>
+      <div className="direct-config">
+        <label><span>SOURCE NAME</span><input value={sourceName} onChange={event => setSourceName(event.target.value)} placeholder={method === 'webhook' ? 'Example: Defender Alerts' : method === 'syslog' ? 'Example: Branch Firewall' : 'Example: Incident Evidence'} /></label>
+        {method === 'webhook' ? <>
+          <div className="direct-info-row"><span><small>PAYLOAD FORMAT</small><b>JSON</b></span><span><small>AUTHENTICATION</small><b>HMAC SIGNATURE</b></span><span><small>DELIVERY</small><b>HTTPS POST</b></span></div>
+          <div className="endpoint-preview"><span>INGESTION ENDPOINT</span><code>Generated after backend activation</code></div>
+        </> : method === 'syslog' ? <>
+          <div className="form-split"><label><span>TRANSPORT</span><select defaultValue="tls"><option value="tls">TCP + TLS</option><option value="tcp">TCP</option><option value="udp">UDP</option></select></label><label><span>LISTENER PORT</span><input value="6514" readOnly /></label></div>
+          <div className="direct-guidance">A lightweight collector will securely forward remote device logs to AegisFlow.</div>
+        </> : <>
+          <label className="direct-drop"><input type="file" accept=".log,.json,.csv,.evtx" /><i>↑</i><b>Choose security log file</b><small>LOG, JSON, CSV and EVTX · processing starts after backend activation</small></label>
+        </>}
+        {directNotice ? <div className="siem-notice ok">✓<span>Direct source UI saved for review. Backend ingestion endpoint is the next implementation step.</span></div> : null}
+        <div className="siem-actions"><button type="button" className="secondary-action" onClick={() => setDirectNotice(false)}>Reset</button><button type="button" className="primary-action" disabled={!sourceName.trim()} onClick={() => setDirectNotice(true)}>Save Source Setup</button></div>
+      </div>
+    </section>
+    <aside className="connection-summary direct-summary">
+      <div className="summary-signal"><span/><div><small>DIRECT STREAM SIGNAL</small><b>NOT ACTIVE</b><p>No direct telemetry connected</p></div></div>
+      <div className="direct-pipeline">
+        <span><i>01</i><b>Receive</b><small>Webhook, syslog or file</small></span>
+        <span><i>02</i><b>Normalize</b><small>Common security schema</small></span>
+        <span><i>03</i><b>Detect</b><small>Rules before AI analysis</small></span>
+        <span><i>04</i><b>Investigate</b><small>Create incident for threats</small></span>
+      </div>
+      <div className="direct-security-note"><b>RAW LOG SAFETY</b><p>Raw telemetry is parsed and filtered first. Only suspicious events continue to AI investigation.</p></div>
+      <p className="credential-note">Backend status remains OFF until a real collector or ingestion endpoint is activated.</p>
+    </aside>
   </div>
 }
 
