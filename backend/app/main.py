@@ -1,4 +1,4 @@
-"""AegisFlow FastAPI application entrypoint."""
+"""BlueOrch FastAPI application entrypoint."""
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request, status
@@ -33,7 +33,7 @@ async def lifespan(app: FastAPI):
     # works out of the box. Alembic migrations are the source of truth otherwise.
     if settings.database_url.startswith("sqlite"):
         Base.metadata.create_all(bind=engine)
-    logger.info("AegisFlow started | demo_mode=%s | env=%s", settings.demo_mode, settings.environment)
+    logger.info("BlueOrch started | demo_mode=%s | env=%s", settings.demo_mode, settings.environment)
     yield
 
 
