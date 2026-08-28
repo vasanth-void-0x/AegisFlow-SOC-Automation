@@ -40,6 +40,15 @@ export function OverviewPage() {
     <section className="capability-strip" aria-label="AegisFlow engineering coverage">
       <Capability value="11" label="AUTOMATION PHASES" detail="End-to-end SOC workflow"/><Capability value="07" label="MCP SECURITY TOOLS" detail="Typed and audit logged"/><Capability value="06" label="RAG RUNBOOKS" detail="Evidence-linked guidance"/><Capability value="110" label="TEST SCENARIOS" detail="Backend security coverage"/>
     </section>
+    <footer className="overview-footer">
+      <div className="footer-brand"><span>V</span><div><b>ENGINEERED BY VASANTH</b><small>AI SECURITY · SOC AUTOMATION</small></div></div>
+      <nav className="footer-social" aria-label="AegisFlow social links">
+        <a href="https://github.com/vasanth-void-0x" target="_blank" rel="noreferrer">GITHUB ↗</a>
+        <a href="https://vasanth-portfolio-ten.vercel.app/" target="_blank" rel="noreferrer">PORTFOLIO ↗</a>
+        <a href="https://github.com/vasanth-void-0x/AegisFlow-SOC-Automation" target="_blank" rel="noreferrer">SOURCE ↗</a>
+      </nav>
+      <div className="footer-meta"><span>AEGISFLOW v1.0.0</span><small>© 2026 VASANTH KUMAR. ALL RIGHTS RESERVED.</small></div>
+    </footer>
     {incidentsExpanded?<IncidentOverlay incidents={incidents} onClose={()=>setIncidentsExpanded(false)}/>:null}
   </div>
 }
