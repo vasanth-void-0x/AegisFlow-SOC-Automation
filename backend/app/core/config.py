@@ -24,7 +24,7 @@ class Settings(BaseSettings):
 
     # --- Database ---
     database_url: str = Field(
-        default="sqlite:////tmp/aegisflow.db" if os.getenv("VERCEL") else "sqlite:///./aegisflow.db"
+        default="sqlite:////tmp/blueorch.db" if os.getenv("VERCEL") else "sqlite:///./blueorch.db"
     )
 
     # --- Security ---
@@ -56,6 +56,9 @@ class Settings(BaseSettings):
     siem_encryption_key: str = Field(default="")
     siem_request_timeout_seconds: float = Field(default=15.0)
     siem_sync_limit: int = Field(default=500)
+    direct_log_api_key: str = Field(default="")
+    n8n_webhook_url: str = Field(default="")
+    n8n_webhook_secret: str = Field(default="")
 
 
 @lru_cache

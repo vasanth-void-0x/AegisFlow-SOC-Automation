@@ -4,7 +4,7 @@
     {
       "parameters": {
         "httpMethod": "POST",
-        "path": "aegisflow-alert",
+        "path": "blueorch-alert",
         "responseMode": "responseNode",
         "options": {}
       },
@@ -13,12 +13,12 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
       "position": [-1600, 0],
-      "webhookId": "aegisflow-alert-webhook"
+      "webhookId": "blueorch-alert-webhook"
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "={{$env.AEGISFLOW_API_BASE}}/api/v1/alerts",
+        "url": "={{$env.BLUEORCH_API_BASE}}/api/v1/alerts",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify($json.body) }}",
@@ -70,7 +70,7 @@
     {
       "parameters": {
         "method": "GET",
-        "url": "={{$env.AEGISFLOW_API_BASE}}/api/v1/incidents/{{$json.id}}/enrichment",
+        "url": "={{$env.BLUEORCH_API_BASE}}/api/v1/incidents/{{$json.id}}/enrichment",
         "options": { "timeout": 15000 }
       },
       "id": "enrich-indicators",
@@ -87,7 +87,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "={{$env.AEGISFLOW_API_BASE}}/api/v1/incidents/{{$('Create Incident').item.json.id}}/triage",
+        "url": "={{$env.BLUEORCH_API_BASE}}/api/v1/incidents/{{$('Create Incident').item.json.id}}/triage",
         "options": { "timeout": 30000 }
       },
       "id": "run-ai-triage",
@@ -237,7 +237,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "={{$env.AEGISFLOW_API_BASE}}/api/v1/incidents/{{$('Create Incident').item.json.id}}/proposals",
+        "url": "={{$env.BLUEORCH_API_BASE}}/api/v1/incidents/{{$('Create Incident').item.json.id}}/proposals",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify({action_type: 'isolate_host', target: $('Create Incident').item.json.hostname || $('Create Incident').item.json.source_ip, justification: $json.result.summary, proposed_by: 'n8n_workflow'}) }}",
@@ -256,7 +256,7 @@
     {
       "parameters": {
         "method": "PATCH",
-        "url": "={{$env.AEGISFLOW_API_BASE}}/api/v1/incidents/{{$('Create Incident').item.json.id}}/status",
+        "url": "={{$env.BLUEORCH_API_BASE}}/api/v1/incidents/{{$('Create Incident').item.json.id}}/status",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={\"status\": \"pending_approval\"}",
@@ -274,7 +274,7 @@
     {
       "parameters": {
         "method": "PATCH",
-        "url": "={{$env.AEGISFLOW_API_BASE}}/api/v1/incidents/{{$('Create Incident').item.json.id}}/status",
+        "url": "={{$env.BLUEORCH_API_BASE}}/api/v1/incidents/{{$('Create Incident').item.json.id}}/status",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={\"status\": \"triaging\"}",
@@ -302,6 +302,21 @@
     },
     {
       "parameters": {
+        "method": "GET",
+        "url": "={{$env.BLUEORCH_API_BASE}}/api/v1/incidents/{{$('Create Incident').item.json.id}}/report",
+        "options": { "timeout": 10000 }
+      },
+      "id": "generate-final-report",
+      "name": "Generate Final Report",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1270, -120],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
         "respondWith": "json",
         "responseBody": "={{ JSON.stringify({status: 'accepted', incident_id: $('Create Incident').item.json.id}) }}"
       },
@@ -309,7 +324,7 @@
       "name": "Respond to Webhook",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
-      "position": [1400, -120]
+      "position": [1510, -120]
     },
     {
       "parameters": {
@@ -384,6 +399,9 @@
       "main": [[{ "node": "Record Workflow Result", "type": "main", "index": 0 }]]
     },
     "Record Workflow Result": {
+      "main": [[{ "node": "Generate Final Report", "type": "main", "index": 0 }]]
+    },
+    "Generate Final Report": {
       "main": [[{ "node": "Respond to Webhook", "type": "main", "index": 0 }]]
     }
   },
@@ -391,7 +409,7 @@
     "executionOrder": "v1",
     "saveManualExecutions": true,
     "callerPolicy": "workflowsFromSameOwner",
-    "errorWorkflow": "aegisflow-error-handler"
+    "errorWorkflow": "blueorch-error-handler"
   },
   "staticData": null,
   "meta": {

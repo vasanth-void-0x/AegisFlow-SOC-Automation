@@ -116,6 +116,10 @@ def approve_proposal(db: Session, proposal_id: str, approver: str, reason: str) 
         metadata={"proposal_id": proposal.id, "execution_result": execution_result},
     )
 
+    from app.services.incident_service import update_incident_status
+
+    update_incident_status(db, proposal.incident_id, "contained")
+
     logger.info("Proposal %s approved by %s and executed", proposal.id, approver)
     return proposal
 

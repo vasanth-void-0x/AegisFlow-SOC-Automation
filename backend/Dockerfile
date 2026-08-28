@@ -17,10 +17,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-RUN useradd --create-home --shell /bin/bash aegisflow \
+RUN useradd --create-home --shell /bin/bash blueorch \
     && mkdir -p /app/chroma_data \
-    && chown -R aegisflow:aegisflow /app
-USER aegisflow
+    && chown -R blueorch:blueorch /app
+USER blueorch
 
 EXPOSE 8000
 

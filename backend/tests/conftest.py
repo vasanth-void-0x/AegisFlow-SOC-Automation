@@ -11,6 +11,14 @@ from sqlalchemy.pool import StaticPool
 
 from app.database.session import Base, get_db
 from app.main import app
+from app.services.cache import get_enrichment_cache
+
+
+@pytest.fixture(autouse=True)
+def clear_process_caches():
+    get_enrichment_cache().clear()
+    yield
+    get_enrichment_cache().clear()
 
 
 @pytest.fixture()

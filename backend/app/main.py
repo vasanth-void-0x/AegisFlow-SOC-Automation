@@ -11,11 +11,13 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from app.api.approvals import router as approvals_router
 from app.api.audit import router as audit_router
 from app.api.enrichment import router as enrichment_router
+from app.api.direct_logs import router as direct_logs_router
 from app.api.health import router as health_router
 from app.api.incidents import router as incidents_router
 from app.api.runbooks import router as runbooks_router
 from app.api.triage import router as triage_router
 from app.api.siem import router as siem_router
+from app.api.reports import router as reports_router
 from app.core.config import get_settings
 from app.core.logging import configure_logging, get_logger
 from app.core.rate_limit import RateLimitMiddleware
@@ -90,6 +92,8 @@ def create_app() -> FastAPI:
     app.include_router(approvals_router, prefix="/api/v1")
     app.include_router(audit_router, prefix="/api/v1")
     app.include_router(siem_router, prefix="/api/v1")
+    app.include_router(direct_logs_router, prefix="/api/v1")
+    app.include_router(reports_router, prefix="/api/v1")
 
     return app
 

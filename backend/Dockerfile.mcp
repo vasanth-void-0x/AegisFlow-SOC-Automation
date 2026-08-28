@@ -13,7 +13,7 @@ RUN pip install --no-cache-dir -r requirements-mcp.txt
 
 COPY . .
 
-RUN useradd --create-home --shell /bin/bash aegisflow && chown -R aegisflow:aegisflow /app
-USER aegisflow
+RUN useradd --create-home --shell /bin/bash blueorch && chown -R blueorch:blueorch /app
+USER blueorch
 
 CMD ["python", "-m", "app.mcp_server.server"]

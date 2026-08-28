@@ -9,7 +9,18 @@ timeout-enforced, and written to the audit log with secrets redacted.
 """
 import asyncio
 
-from mcp.server.fastmcp import FastMCP
+try:
+    from mcp.server.fastmcp import FastMCP
+except ModuleNotFoundError:  # Main API venv intentionally excludes the isolated MCP SDK.
+    class FastMCP:  # type: ignore[no-redef]
+        def __init__(self, *_args, **_kwargs):
+            pass
+
+        def tool(self, *_args, **_kwargs):
+            return lambda function: function
+
+        def run(self, *_args, **_kwargs):
+            raise RuntimeError("Install backend/requirements-mcp.txt before running the MCP server")
 
 from app.core.config import get_settings
 from app.core.logging import configure_logging, get_logger
@@ -43,7 +54,7 @@ ALLOWED_TOOLS = {
     "create_response_proposal",
 }
 
-mcp = FastMCP("aegisflow-security")
+mcp = FastMCP("blueorch-security")
 
 
 def _guarded(tool_name: str, async_call):
