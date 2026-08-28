@@ -323,4 +323,7 @@ endpoint, source profile, Windows/Linux support, event fingerprinting, and conti
 
 ## License
 
-Portfolio project — no license restrictions on personal/educational use.
+Released under the [MIT License](LICENSE). You may use, modify, and distribute
+the project provided that the original copyright and license notice are retained.
+
+Copyright © 2026 Vasanth Kumar.
