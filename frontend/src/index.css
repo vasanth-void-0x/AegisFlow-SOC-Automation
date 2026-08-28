@@ -267,10 +267,11 @@ body{background-image:none!important}
 
 /* Compact left navigation; preserve the winged V showcase at its current size */
 @media(min-width:761px){
-  .brand-lockup{height:66px;gap:7px;padding:0 12px 0 10px;border-bottom:0;background:none!important}
-  .brand-mark.crystal-v{width:52px;height:58px;flex:0 0 52px;align-self:center}
-  .brand-mark.crystal-v img{width:52px;height:58px;object-position:center;transform:translateY(1px)}
-  .brand-name{font-size:19px;letter-spacing:1.1px;white-space:nowrap}
+  .sidebar{border-right:0}
+  .brand-lockup{height:74px;gap:5px;padding:0 10px 0 7px;border-bottom:0;background:none!important}
+  .brand-mark.crystal-v{width:56px;height:64px;flex:0 0 56px;align-self:center}
+  .brand-mark.crystal-v img{width:56px;height:64px;object-position:center;transform:none}
+  .brand-name{font-size:21px;letter-spacing:.75px;white-space:nowrap}
   .brand-caption{margin-top:1px;font-size:5.5px;letter-spacing:1.45px}
   .brand-lockup:after{display:none}
   .nav-label{padding:8px 17px 4px;font-size:5.5px}
