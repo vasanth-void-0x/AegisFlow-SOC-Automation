@@ -1,4 +1,4 @@
-# AegisFlow MCP Security Server - isolated from the main backend image
+# BlueOrch MCP Security Server - isolated from the main backend image
 # because the mcp SDK requires a newer starlette than FastAPI supports.
 FROM python:3.12-slim AS base
 
