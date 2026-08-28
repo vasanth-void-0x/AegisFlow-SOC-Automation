@@ -1,6 +1,6 @@
 # MCP Server Setup Guide
 
-AegisFlow's MCP security server exposes 7 typed tools that let any MCP client (Claude Desktop, Claude
+BlueOrch's MCP security server exposes 7 typed tools that let any MCP client (Claude Desktop, Claude
 Code, a custom agent, etc.) interact with the SOC platform directly.
 
 ## Why a separate environment?
