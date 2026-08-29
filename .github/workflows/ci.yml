@@ -44,11 +44,13 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements-mcp.txt
-          pip install fastapi==0.115.6 pytest==8.3.4 pytest-asyncio==0.24.0
+          pip install pytest==8.3.4 pytest-asyncio==0.24.0
 
       - name: Run MCP server tests
         working-directory: backend
-        run: pytest tests/test_mcp_server.py -v -o asyncio_mode=auto
+        # MCP tests own their fixtures and dependency boundary. Loading the
+        # backend-wide conftest imports FastAPI-only services into this job.
+        run: pytest --noconftest tests/test_mcp_server.py -v -o asyncio_mode=auto
 
   frontend-build:
     name: Frontend build + typecheck
