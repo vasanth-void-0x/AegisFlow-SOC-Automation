@@ -16,6 +16,8 @@ import type {
   SiemProvider,
   SiemSyncResult,
   SiemTestResult,
+  LogAgentStatus,
+  LogAgentRegistration,
 } from './types'
 
 const BASE = '/api/v1'
@@ -127,6 +129,10 @@ export const api = {
   syncSiem: (provider: SiemProvider) =>
     request<SiemSyncResult>(`/siem/${provider}/sync`, { method: 'POST' }),
   getDashboardKpis: () => request<DashboardKpis>('/dashboard/kpis'),
+  registerLogAgent: (body: { name: string; platform: string; profile: string }, registrationToken: string) =>
+    request<LogAgentRegistration>('/agents/register', { method: 'POST', headers: { 'X-BlueOrch-Registration-Token': registrationToken }, body: JSON.stringify(body) }),
+  listLogAgents: (registrationToken: string) =>
+    request<LogAgentStatus[]>('/agents', { headers: { 'X-BlueOrch-Registration-Token': registrationToken } }),
 }
 
 export { ApiError }

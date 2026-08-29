@@ -52,3 +52,43 @@ def test_bulk_direct_logs_and_final_report(client):
     report = client.get(f"/api/v1/incidents/{incident_id}/report")
     assert report.status_code == 200
     assert report.json()["report_version"] == "blueorch-1.0"
+
+
+def test_agent_registration_heartbeat_and_authenticated_batch(client):
+    settings = get_settings()
+    original = settings.direct_log_registration_token
+    settings.direct_log_registration_token = "registration-secret"
+    try:
+        denied = client.post("/api/v1/agents/register", json={"name": "WIN-DENIED"})
+        assert denied.status_code == 401
+        registered = client.post(
+            "/api/v1/agents/register",
+            headers={"X-BlueOrch-Registration-Token": "registration-secret"},
+            json={"name": "BLUEORCH-WIN-01", "platform": "windows", "profile": "full"},
+        )
+        assert registered.status_code == 201
+        api_key = registered.json()["api_key"]
+        assert api_key.startswith("boa_")
+
+        heartbeat = client.post(
+            "/api/v1/agents/heartbeat",
+            headers={"X-BlueOrch-Agent-Key": api_key},
+            json={"hostname": "LAB-PC", "agent_version": "1.0.0"},
+        )
+        assert heartbeat.status_code == 200
+        assert heartbeat.json()["status"] == "online"
+
+        batch = client.post(
+            "/api/v1/agents/logs/bulk",
+            headers={"X-BlueOrch-Agent-Key": api_key},
+            json={"logs": [{"message": "Windows authentication failure", "event_id": "win-4625-1"}]},
+        )
+        assert batch.status_code == 200
+        assert batch.json()["accepted"] == 1
+        assert batch.json()["incidents"][0]["source"] == "direct:agent:BLUEORCH-WIN-01"
+
+        agents = client.get("/api/v1/agents", headers={"X-BlueOrch-Registration-Token": "registration-secret"})
+        assert agents.status_code == 200
+        assert agents.json()[0]["events_received"] == 1
+    finally:
+        settings.direct_log_registration_token = original

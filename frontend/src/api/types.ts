@@ -195,3 +195,26 @@ export interface DashboardKpis {
   active_incidents: number
   contained_threats: number
 }
+
+export interface LogAgentStatus {
+  id: string
+  name: string
+  platform: 'windows' | 'linux'
+  profile: 'security' | 'system' | 'full'
+  hostname: string | null
+  agent_version: string | null
+  status: 'online' | 'offline'
+  last_seen_at: string | null
+  events_received: number
+  created_at: string
+}
+
+export interface LogAgentRegistration {
+  id: string
+  name: string
+  platform: string
+  profile: string
+  api_key: string
+  ingest_path: string
+  heartbeat_path: string
+}

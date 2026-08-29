@@ -40,7 +40,7 @@ evidence-linked SOC automation workflows.
 | 11 | Docker & CI | ✅ (Docker builds are syntax-validated, not build-tested — see [Limitations](#known-limitations--honest-notes)) |
 | 12 | Splunk & Wazuh SIEM connectivity | ✅ |
 | 13 | Direct log normalization, deduplication & bulk ingestion | ✅ |
-| 14 | Windows/Linux 24×7 file-tail collector | ✅ |
+| 14 | Windows 24×7 Event Log collector, heartbeat & disk retry | ✅ |
 | 15 | Final incident report API | ✅ |
 
 **119 backend tests passing** in the verified combined FastAPI/MCP test suite.
@@ -107,7 +107,7 @@ BlueOrch-SOC-Automation/
 │   └── requirements-mcp.txt        Isolated MCP server deps (see below)
 ├── frontend/                React + TypeScript + Vite SOC dashboard
 ├── n8n/                      Importable workflow JSON + error handler
-├── collector/                 Dependency-free Windows/Linux 24×7 file-tail agent
+├── collector/                 Windows Event Log agent + scheduled-task installer
 ├── runbooks/                  6 SOC runbooks (Markdown, RAG-indexed)
 ├── evaluation/                  AI eval dataset + runner + report
 ├── sample-data/                   Safe fictional sample alerts
@@ -180,17 +180,25 @@ curl -X POST http://localhost:8000/api/v1/logs/ingest \
   -d '{"message":"Failed login brute force from 203.0.113.10 to 10.0.0.5","source_type":"agent","source_name":"windows-lab","event_id":"test-001"}'
 ```
 
-Run the included continuous collector against any text log:
+For a deployed setup, first configure `DIRECT_LOG_REGISTRATION_TOKEN` and a persistent
+`DATABASE_URL` in Vercel. In **Settings → Direct Log Source**, enter that registration token,
+register `BLUEORCH-WIN-01`, and copy the one-time device API key.
 
-```bash
-python collector/blueorch_agent.py \
-  --file /path/to/security.log \
-  --api-url http://localhost:8000 \
-  --api-key "$DIRECT_LOG_API_KEY" \
-  --source-name lab-device
+Download/clone this repository on the Windows device. Open `collector` in **Administrator
+PowerShell**, then install the 24×7 collector:
+
+```powershell
+.\install_windows.ps1 `
+  -ApiUrl "https://aegisflow-soc-automation.vercel.app" `
+  -ApiKey "boa_COPY_THE_ONE_TIME_KEY" `
+  -SourceName "BLUEORCH-WIN-01" `
+  -Profile "security"
 ```
 
-Use `--from-start` to send existing lines or omit it to follow only new events.
+The installer creates a SYSTEM scheduled task that starts at boot. The agent reads new Windows
+Security events (optionally System/Application), batches them over HTTPS, sends heartbeats, uses
+stable record IDs for deduplication, and stores unsent events under `C:\ProgramData\BlueOrch\Agent`.
+Use `Get-ScheduledTask -TaskName "BlueOrch Log Agent"` to verify it.
 
 ## Environment variables
 
@@ -202,8 +210,9 @@ See [.env.example](.env.example) for the full reference. Everything defaults to 
 | `GROQ_API_KEY` | Live AI triage | No — falls back to rule-based triage |
 | `VIRUSTOTAL_API_KEY` | Live IOC reputation | No — falls back to demo enrichment |
 | `ENABLE_REAL_RESPONSE_ADAPTER` | Enable real (non-simulated) response actions | No — **must stay `false` unless you've implemented and reviewed a real adapter** |
-| `DATABASE_URL` | SQLite by default, Postgres-compatible | No |
+| `DATABASE_URL` | Persistent Postgres URL (required for deployed 24×7 telemetry) | Production direct logs |
 | `DIRECT_LOG_API_KEY` | Protects agent/webhook/bulk log-ingestion endpoints | Recommended for remote collectors |
+| `DIRECT_LOG_REGISTRATION_TOKEN` | Admin secret used only to register/list collector devices | Agent setup |
 | `BLUEORCH_API_BASE` | Backend base URL used by imported n8n workflows | Required in n8n |
 | `SIEM_ENCRYPTION_KEY` | Encrypts stored Splunk/Wazuh credentials | Required when connecting SIEM |
 
@@ -311,12 +320,13 @@ pipeline alongside system readiness, incident telemetry, MCP/RAG integrations, a
 The Settings workspace supports encrypted Splunk Management API and Wazuh Indexer connections,
 connection testing, TLS verification, index selection, manual synchronization, and a live SIEM signal.
 
-### Direct logs — Windows/Linux collector
+### Direct logs — Windows collector
 
 ![BlueOrch direct log agent setup](docs/screenshots/blueorch-settings-direct-agent.jpg)
 
-The second ingestion mode documents the dependency-free `collector/blueorch_agent.py`, secured HTTPS
-endpoint, source profile, Windows/Linux support, event fingerprinting, and continuous file-tail flow.
+The second ingestion mode registers a device-specific key and reports real online/offline state. The
+dependency-free collector reads Windows Event Logs, sends authenticated HTTPS batches and heartbeats,
+deduplicates by record ID, and retains an on-disk retry queue through network interruptions.
 
 > The interface is optimized for desktop security operations. Live provider features depend on the
 > environment variables documented above; response actions remain intentionally simulated.

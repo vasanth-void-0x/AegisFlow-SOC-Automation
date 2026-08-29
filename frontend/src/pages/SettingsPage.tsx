@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { api, ApiError } from '../api/client'
-import type { SiemConnectInput, SiemConnection, SiemProvider } from '../api/types'
+import type { LogAgentRegistration, LogAgentStatus, SiemConnectInput, SiemConnection, SiemProvider } from '../api/types'
 import { LoadingState } from '../components/Panel'
 
 const INITIAL: SiemConnectInput = {
@@ -89,8 +89,13 @@ type DirectMethod = 'agent' | 'webhook' | 'syslog' | 'file'
 
 function DirectLogSetup() {
   const [method, setMethod] = useState<DirectMethod>('agent')
-  const [sourceName, setSourceName] = useState('')
-  const [directNotice, setDirectNotice] = useState(false)
+  const [sourceName, setSourceName] = useState('BLUEORCH-WIN-01')
+  const [profile, setProfile] = useState<'security'|'system'|'full'>('security')
+  const [registrationToken, setRegistrationToken] = useState('')
+  const [registered, setRegistered] = useState<LogAgentRegistration | null>(null)
+  const [agents, setAgents] = useState<LogAgentStatus[]>([])
+  const [directNotice, setDirectNotice] = useState<{kind:'ok'|'error';text:string}|null>(null)
+  const [registering, setRegistering] = useState(false)
   const methods: { id: DirectMethod; icon: string; title: string; detail: string }[] = [
     { id: 'agent', icon: '24', title: '24/7 Live Agent', detail: 'Windows · Linux devices' },
     { id: 'webhook', icon: '{}', title: 'JSON Webhook', detail: 'Apps · EDR · Cloud alerts' },
@@ -102,13 +107,14 @@ function DirectLogSetup() {
     <section className="siem-card direct-log-card">
       <div className="siem-card-head"><div><span className="section-kicker">DIRECT INGESTION</span><h2>24/7 Direct Log Monitoring</h2><p>Run the lightweight BlueOrch collector on Windows or Linux to forward new log events while the dashboard is closed.</p></div><div className="connection-pill direct-ready"><span/>BACKEND READY</div></div>
       <div className="direct-methods" role="tablist" aria-label="Direct log method">
-        {methods.map(item => <button type="button" role="tab" aria-selected={method === item.id} className={method === item.id ? 'active' : ''} key={item.id} onClick={() => { setMethod(item.id); setDirectNotice(false) }}><i>{item.icon}</i><b>{item.title}</b><small>{item.detail}</small></button>)}
+        {methods.map(item => <button type="button" role="tab" aria-selected={method === item.id} className={method === item.id ? 'active' : ''} key={item.id} onClick={() => { setMethod(item.id); setDirectNotice(null) }}><i>{item.icon}</i><b>{item.title}</b><small>{item.detail}</small></button>)}
       </div>
       <div className="direct-config">
         <label><span>SOURCE NAME</span><input value={sourceName} onChange={event => setSourceName(event.target.value)} placeholder={method === 'agent' ? 'Example: Office Windows PC' : method === 'webhook' ? 'Example: Defender Alerts' : method === 'syslog' ? 'Example: Branch Firewall' : 'Example: Incident Evidence'} /></label>
         {method === 'agent' ? <>
-          <div className="agent-platforms"><label><span>DEVICE OS</span><select defaultValue="windows"><option value="windows">Windows 10 / 11 / Server</option><option value="linux">Linux Server / Workstation</option></select></label><label><span>COLLECTION PROFILE</span><select defaultValue="security"><option value="security">Security Events</option><option value="system">Security + System</option><option value="full">Full Endpoint Telemetry</option></select></label></div>
-          <div className="live-agent-banner"><i><span/></i><div><b>CONTINUOUS FILE-TAIL COLLECTOR</b><p>Watches new log lines, securely forwards each event, and uses stable event IDs to prevent duplicate incidents.</p></div></div>
+          <div className="agent-platforms"><label><span>DEVICE OS</span><select value="windows" disabled><option value="windows">Windows 10 / 11 / Server</option></select></label><label><span>COLLECTION PROFILE</span><select value={profile} onChange={event=>setProfile(event.target.value as typeof profile)}><option value="security">Security Events</option><option value="system">Security + System</option><option value="full">Security + System + Application</option></select></label></div>
+          <label><span>REGISTRATION TOKEN</span><input type="password" autoComplete="off" value={registrationToken} onChange={event=>setRegistrationToken(event.target.value)} placeholder="DIRECT_LOG_REGISTRATION_TOKEN from deployment" /></label>
+          <div className="live-agent-banner"><i><span/></i><div><b>WINDOWS EVENT LOG COLLECTOR</b><p>Reads only new Windows events, sends authenticated batches, heartbeats every cycle and safely queues events when offline.</p></div></div>
           <div className="direct-info-row agent-features"><span><small>TRANSPORT</small><b>ENCRYPTED HTTPS</b></span><span><small>PLATFORMS</small><b>WINDOWS · LINUX</b></span><span><small>DEDUPLICATION</small><b>EVENT ID + HASH</b></span></div>
           <div className="endpoint-preview"><span>COLLECTOR PACKAGE</span><code>collector/blueorch_agent.py</code></div>
         </> : method === 'webhook' ? <>
@@ -120,20 +126,21 @@ function DirectLogSetup() {
         </> : <>
           <label className="direct-drop"><input type="file" accept=".log,.json,.csv,.evtx" /><i>↑</i><b>Choose security log file</b><small>LOG, JSON and CSV can be forwarded through the collector or bulk API</small></label>
         </>}
-        {directNotice ? <div className="siem-notice ok">✓<span>Source profile ready. Start the collector with this source name to begin live ingestion.</span></div> : null}
-        <div className="siem-actions"><button type="button" className="secondary-action" onClick={() => setDirectNotice(false)}>Reset</button><button type="button" className="primary-action" disabled={!sourceName.trim()} onClick={() => setDirectNotice(true)}>Save Source Setup</button></div>
+        {directNotice ? <div className={`siem-notice ${directNotice.kind}`}>{directNotice.kind==='ok'?'✓':'!'}<span>{directNotice.text}</span></div> : null}
+        {registered ? <div className="direct-security-note"><b>ONE-TIME DEVICE API KEY</b><p><code>{registered.api_key}</code></p><p>Copy now. BlueOrch stores only its SHA-256 hash and cannot show this key again.</p></div> : null}
+        <div className="siem-actions"><button type="button" className="secondary-action" disabled={!registrationToken} onClick={async()=>{try{setAgents(await api.listLogAgents(registrationToken));setDirectNotice({kind:'ok',text:'Agent status refreshed.'})}catch(error){setDirectNotice({kind:'error',text:error instanceof Error?error.message:'Status failed'})}}}>Refresh Status</button><button type="button" className="primary-action" disabled={!sourceName.trim()||!registrationToken||registering} onClick={async()=>{setRegistering(true);try{const result=await api.registerLogAgent({name:sourceName,platform:'windows',profile},registrationToken);setRegistered(result);setDirectNotice({kind:'ok',text:'Device registered. Copy the API key and run the installer.'})}catch(error){setDirectNotice({kind:'error',text:error instanceof Error?error.message:'Registration failed'})}finally{setRegistering(false)}}}>{registering?'Registering…':'Register Windows Device'}</button></div>
       </div>
     </section>
     <aside className="connection-summary direct-summary">
-      <div className="summary-signal"><span/><div><small>24/7 COLLECTOR SIGNAL</small><b>AGENT OFFLINE</b><p>No live device connected yet</p></div></div>
+      <div className="summary-signal"><span className={agents.some(item=>item.status==='online')?'on':''}/><div><small>24/7 COLLECTOR SIGNAL</small><b>{agents.some(item=>item.status==='online')?'AGENT ONLINE':'AGENT OFFLINE'}</b><p>{agents[0]?`${agents[0].name} · ${agents[0].events_received} events · ${formatTime(agents[0].last_seen_at)}`:'Register and start one Windows device'}</p></div></div>
       <div className="direct-pipeline">
         <span><i>01</i><b>Collect Continuously</b><small>Background agent watches device logs</small></span>
-        <span><i>02</i><b>Send Securely</b><small>HTTPS with optional collector API key</small></span>
+        <span><i>02</i><b>Send Securely</b><small>HTTPS with a unique device API key</small></span>
         <span><i>03</i><b>Normalize Events</b><small>Infer severity, extract IPs and deduplicate</small></span>
         <span><i>04</i><b>AI Investigation</b><small>Create incidents and request approval</small></span>
       </div>
       <div className="direct-security-note"><b>RAW LOG SAFETY</b><p>Telemetry is validated, size-limited, normalized and stored as canonical incident evidence.</p></div>
-      <p className="credential-note">The dashboard does not need to stay open. Incoming events create normalized incidents and update dashboard KPIs through the backend.</p>
+      <p className="credential-note">Install: clone/download the repository, open collector in Administrator PowerShell, then run <b>.\install_windows.ps1 -ApiUrl https://aegisflow-soc-automation.vercel.app -ApiKey YOUR_KEY -SourceName {sourceName} -Profile {profile}</b></p>
     </aside>
   </div>
 }
