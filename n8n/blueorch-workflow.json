@@ -18,7 +18,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "={{$env.BLUEORCH_API_BASE}}/api/v1/alerts",
+        "url": "=https://blueorch-soc-automation.vercel.app/api/v1/alerts",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify($json.body) }}",
@@ -70,7 +70,7 @@
     {
       "parameters": {
         "method": "GET",
-        "url": "={{$env.BLUEORCH_API_BASE}}/api/v1/incidents/{{$json.id}}/enrichment",
+        "url": "=https://blueorch-soc-automation.vercel.app/api/v1/incidents/{{$json.id}}/enrichment",
         "options": { "timeout": 15000 }
       },
       "id": "enrich-indicators",
@@ -87,7 +87,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "={{$env.BLUEORCH_API_BASE}}/api/v1/incidents/{{$('Create Incident').item.json.id}}/triage",
+        "url": "=https://blueorch-soc-automation.vercel.app/api/v1/incidents/{{$('Create Incident').item.json.id}}/triage",
         "options": { "timeout": 30000 }
       },
       "id": "run-ai-triage",
@@ -237,7 +237,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "={{$env.BLUEORCH_API_BASE}}/api/v1/incidents/{{$('Create Incident').item.json.id}}/proposals",
+        "url": "=https://blueorch-soc-automation.vercel.app/api/v1/incidents/{{$('Create Incident').item.json.id}}/proposals",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify({action_type: 'isolate_host', target: $('Create Incident').item.json.hostname || $('Create Incident').item.json.source_ip, justification: $json.result.summary, proposed_by: 'n8n_workflow'}) }}",
@@ -256,7 +256,7 @@
     {
       "parameters": {
         "method": "PATCH",
-        "url": "={{$env.BLUEORCH_API_BASE}}/api/v1/incidents/{{$('Create Incident').item.json.id}}/status",
+        "url": "=https://blueorch-soc-automation.vercel.app/api/v1/incidents/{{$('Create Incident').item.json.id}}/status",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={\"status\": \"pending_approval\"}",
@@ -274,7 +274,7 @@
     {
       "parameters": {
         "method": "PATCH",
-        "url": "={{$env.BLUEORCH_API_BASE}}/api/v1/incidents/{{$('Create Incident').item.json.id}}/status",
+        "url": "=https://blueorch-soc-automation.vercel.app/api/v1/incidents/{{$('Create Incident').item.json.id}}/status",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={\"status\": \"triaging\"}",
@@ -303,7 +303,7 @@
     {
       "parameters": {
         "method": "GET",
-        "url": "={{$env.BLUEORCH_API_BASE}}/api/v1/incidents/{{$('Create Incident').item.json.id}}/report",
+        "url": "=https://blueorch-soc-automation.vercel.app/api/v1/incidents/{{$('Create Incident').item.json.id}}/report",
         "options": { "timeout": 10000 }
       },
       "id": "generate-final-report",

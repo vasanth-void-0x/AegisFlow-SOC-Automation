@@ -16,13 +16,16 @@ Two workflows:
 2. Open the main workflow's **Settings** and confirm "Error Workflow" points at
    "BlueOrch - Error Handler".
 
-## Required environment variable
+## BlueOrch API target
 
-Set this in n8n (Settings -> Environment Variables, or your n8n `.env`):
+The importable cloud workflow is preconfigured for:
 
 ```
-BLUEORCH_API_BASE=http://localhost:8000
+https://blueorch-soc-automation.vercel.app
 ```
+
+Deploy BlueOrch at that address before activating the workflow. If the domain changes, update the
+base URL in the seven HTTP Request nodes after import.
 
 ## Triggering the workflow
 
@@ -36,7 +39,7 @@ Send it the same JSON body as `POST /api/v1/alerts` (see `sample-data/` for
 examples). Example:
 
 ```bash
-curl -X POST http://localhost:5678/webhook/blueorch-alert \
+curl -X POST https://vasantth.app.n8n.cloud/webhook/blueorch-alert \
   -H "Content-Type: application/json" \
   -d @../sample-data/brute_force_ssh.json
 ```
@@ -44,14 +47,14 @@ curl -X POST http://localhost:5678/webhook/blueorch-alert \
 For raw endpoint logs without a SIEM, send them directly to BlueOrch:
 
 ```bash
-curl -X POST http://localhost:8000/api/v1/logs/ingest \
+curl -X POST https://blueorch-soc-automation.vercel.app/api/v1/logs/ingest \
   -H "Content-Type: application/json" \
   -H "X-BlueOrch-Key: $DIRECT_LOG_API_KEY" \
   -d '{"message":"Failed login brute force from 203.0.113.10 to 10.0.0.5","source_type":"agent","source_name":"windows-lab","event_id":"test-001"}'
 ```
 
-The included `collector/blueorch_agent.py` continuously tails a Windows or
-Linux text log and sends each event to this endpoint. The workflow remains
+The included `collector/blueorch_agent.py` continuously reads new Windows Event Log records,
+sends authenticated batches, heartbeats, and keeps a disk retry queue. The workflow remains
 the automation entry for normalized SIEM alerts; both inputs create the same
 canonical incident records and dashboard KPIs.
 
@@ -82,8 +85,8 @@ timeout and retry behavior on the backend side.
   placeholders - wire them to Slack/Jira/PagerDuty/etc. in your own n8n
   instance; this keeps the importable JSON free of environment-specific
   credentials.
-- This workflow assumes the BlueOrch backend is reachable at
-  `BLUEORCH_API_BASE`. It does not manage backend deployment itself.
+- This workflow assumes the BlueOrch backend is reachable at the configured production URL. It
+  does not manage backend deployment itself.
 - Human approval and response execution are enforced by BlueOrch, never by a
   bypass node. After approval, the incident moves to `contained` and its final
   report is available at `/api/v1/incidents/{id}/report`.
