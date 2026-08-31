@@ -51,7 +51,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export const api = {
-  health: () => request<HealthStatus>('/health'),
+  health: () => request<HealthStatus>('/api/v1/health'),
 
   listIncidents: (params: {
     page?: number
