@@ -9,6 +9,7 @@ router = APIRouter(tags=["health"])
 
 
 @router.get("/health")
+@router.get("/api/v1/health")
 def health_check() -> dict:
     settings = get_settings()
     db_status = "ok"
