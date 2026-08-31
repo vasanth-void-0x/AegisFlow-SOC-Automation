@@ -35,6 +35,12 @@ class Settings(BaseSettings):
             return "sqlite:////tmp/blueorch.db"
         return value
 
+    @field_validator("siem_sync_limit", mode="before")
+    @classmethod
+    def blank_siem_sync_limit_uses_default(cls, value: object) -> object:
+        """Treat an empty deployment variable as the documented safe default."""
+        return 500 if value in ("", None) else value
+
     # --- Security ---
     cors_allowed_origins: List[str] = Field(default_factory=lambda: ["http://localhost:5173"])
     max_request_body_bytes: int = Field(default=1_000_000)  # 1 MB
