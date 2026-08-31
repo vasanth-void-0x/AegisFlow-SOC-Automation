@@ -28,7 +28,7 @@ class DirectLogIn(BaseModel):
     def parse_windows_json_timestamp(cls, value: object) -> object:
         """Accept the /Date(milliseconds)/ format emitted by Windows PowerShell 5.1."""
         if isinstance(value, str):
-            match = re.fullmatch(r"/Date\\((-?\\d+)(?:[+-]\\d{4})?\\)/", value)
+            match = re.fullmatch(r"/Date\((-?\d+)(?:[+-]\d{4})?\)/", value)
             if match:
                 return datetime.fromtimestamp(int(match.group(1)) / 1000, tz=timezone.utc)
         return value
