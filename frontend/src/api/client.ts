@@ -33,8 +33,8 @@ class ApiError extends Error {
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const url = path.startsWith('/api/v1') || path === '/health' ? path : `${BASE}${path}`
   const res = await fetch(url, {
-    headers: { 'Content-Type': 'application/json', ...(init?.headers ?? {}) },
     ...init,
+    headers: { 'Content-Type': 'application/json', ...(init?.headers ?? {}) },
   })
   if (!res.ok) {
     let detail = res.statusText
