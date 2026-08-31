@@ -9,7 +9,7 @@ from functools import lru_cache
 import os
 from typing import List
 
-from pydantic import Field
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -26,6 +26,14 @@ class Settings(BaseSettings):
     database_url: str = Field(
         default="sqlite:////tmp/blueorch.db" if os.getenv("VERCEL") else "sqlite:///./blueorch.db"
     )
+
+    @field_validator("database_url", mode="after")
+    @classmethod
+    def use_writable_vercel_sqlite_path(cls, value: str) -> str:
+        """Vercel's application bundle is read-only; SQLite must live in /tmp."""
+        if os.getenv("VERCEL") and value.startswith("sqlite") and "/tmp/" not in value:
+            return "sqlite:////tmp/blueorch.db"
+        return value
 
     # --- Security ---
     cors_allowed_origins: List[str] = Field(default_factory=lambda: ["http://localhost:5173"])
