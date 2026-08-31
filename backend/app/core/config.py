@@ -39,11 +39,13 @@ class Settings(BaseSettings):
         default="sqlite:////tmp/blueorch.db" if os.getenv("VERCEL") else "sqlite:///./blueorch.db"
     )
 
-    @field_validator("database_url", mode="after")
+    @field_validator("database_url", mode="before")
     @classmethod
-    def use_writable_vercel_sqlite_path(cls, value: str) -> str:
-        """Vercel's application bundle is read-only; SQLite must live in /tmp."""
-        if os.getenv("VERCEL") and value.startswith("sqlite") and "/tmp/" not in value:
+    def use_writable_database_url(cls, value: object) -> object:
+        """Use a valid writable SQLite URL when deployment configuration is blank."""
+        if value in ("", None):
+            return "sqlite:////tmp/blueorch.db" if os.getenv("VERCEL") else "sqlite:///./blueorch.db"
+        if os.getenv("VERCEL") and isinstance(value, str) and value.startswith("sqlite") and "/tmp/" not in value:
             return "sqlite:////tmp/blueorch.db"
         return value
 
