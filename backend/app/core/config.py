@@ -9,8 +9,20 @@ from functools import lru_cache
 import os
 from typing import List
 
-from pydantic import Field, field_validator
+from pydantic import Field, ValidationInfo, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+BLANK_NUMERIC_DEFAULTS = {
+    "max_request_body_bytes": 1_000_000,
+    "rate_limit_per_minute": 120,
+    "enrichment_cache_ttl_seconds": 3600,
+    "enrichment_timeout_seconds": 5.0,
+    "rag_relevance_threshold": 0.35,
+    "approval_expiry_minutes": 30,
+    "mcp_tool_timeout_seconds": 10.0,
+    "siem_request_timeout_seconds": 15.0,
+    "siem_sync_limit": 500,
+}
 
 
 class Settings(BaseSettings):
@@ -35,11 +47,11 @@ class Settings(BaseSettings):
             return "sqlite:////tmp/blueorch.db"
         return value
 
-    @field_validator("siem_sync_limit", mode="before")
+    @field_validator(*BLANK_NUMERIC_DEFAULTS.keys(), mode="before")
     @classmethod
-    def blank_siem_sync_limit_uses_default(cls, value: object) -> object:
-        """Treat an empty deployment variable as the documented safe default."""
-        return 500 if value in ("", None) else value
+    def blank_numeric_setting_uses_default(cls, value: object, info: ValidationInfo) -> object:
+        """Treat empty deployment variables as their documented safe defaults."""
+        return BLANK_NUMERIC_DEFAULTS[info.field_name] if value in ("", None) else value
 
     # --- Security ---
     cors_allowed_origins: List[str] = Field(default_factory=lambda: ["http://localhost:5173"])
