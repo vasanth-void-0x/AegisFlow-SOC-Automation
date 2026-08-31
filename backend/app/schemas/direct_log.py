@@ -1,8 +1,9 @@
 """Schemas for SIEM-less endpoint, webhook, and syslog-style ingestion."""
-from datetime import datetime
+from datetime import datetime, timezone
+import re
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.models.incident import Severity
 from app.schemas.incident import IncidentOut
@@ -21,6 +22,16 @@ class DirectLogIn(BaseModel):
     destination_ip: str | None = Field(default=None, max_length=64)
     event_id: str | None = Field(default=None, max_length=128)
     fields: dict[str, Any] = Field(default_factory=dict)
+
+    @field_validator("timestamp", mode="before")
+    @classmethod
+    def parse_windows_json_timestamp(cls, value: object) -> object:
+        """Accept the /Date(milliseconds)/ format emitted by Windows PowerShell 5.1."""
+        if isinstance(value, str):
+            match = re.fullmatch(r"/Date\\((-?\\d+)(?:[+-]\\d{4})?\\)/", value)
+            if match:
+                return datetime.fromtimestamp(int(match.group(1)) / 1000, tz=timezone.utc)
+        return value
 
 
 class DirectLogBatchIn(BaseModel):
