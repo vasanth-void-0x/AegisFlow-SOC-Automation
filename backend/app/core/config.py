@@ -47,6 +47,10 @@ class Settings(BaseSettings):
             return "sqlite:////tmp/blueorch.db" if os.getenv("VERCEL") else "sqlite:///./blueorch.db"
         if os.getenv("VERCEL") and isinstance(value, str) and value.startswith("sqlite") and "/tmp/" not in value:
             return "sqlite:////tmp/blueorch.db"
+        if isinstance(value, str) and value.startswith("postgres://"):
+            return value.replace("postgres://", "postgresql+psycopg://", 1)
+        if isinstance(value, str) and value.startswith("postgresql://"):
+            return value.replace("postgresql://", "postgresql+psycopg://", 1)
         return value
 
     @field_validator(*BLANK_NUMERIC_DEFAULTS.keys(), mode="before")
