@@ -1,11 +1,11 @@
 """Phase 1 API: alert ingestion and incident retrieval."""
-from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
+from fastapi import APIRouter, Cookie, Depends, Header, HTTPException, Query, Response, status
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.database.session import get_db
-from app.core.deps import require_operator_or_mcp
-from app.models.user import User
+from app.core.deps import resolve_operator_or_mcp
+from app.core.security import COOKIE_NAME
 from app.models.incident import IncidentStatus, Severity
 from app.schemas.incident import AlertIngest, IncidentListOut, IncidentOut
 from app.services.incident_service import (
@@ -21,6 +21,7 @@ router = APIRouter(tags=["incidents"])
 
 class UpdateStatusRequest(BaseModel):
     status: IncidentStatus
+    service_key: str | None = None
 
 
 @router.post(
@@ -87,8 +88,22 @@ def get_incident_by_id(incident_id: str, db: Session = Depends(get_db)) -> Incid
     response_model=IncidentOut,
     responses={404: {"description": "Incident not found"}},
 )
-def patch_incident_status(incident_id: str, body: UpdateStatusRequest, db: Session = Depends(get_db), _: User = Depends(require_operator_or_mcp)) -> IncidentOut:
+def patch_incident_status(
+    incident_id: str,
+    body: UpdateStatusRequest,
+    db: Session = Depends(get_db),
+    session: str | None = Cookie(default=None, alias=COOKIE_NAME),
+    x_blueorch_mcp_key: str | None = Header(default=None),
+) -> IncidentOut:
     """Update an incident's status. Used by the n8n orchestration workflow."""
+    # n8n may strip imported custom-header toggles between versions. Accepting
+    # the same scoped service key in the TLS-protected JSON body keeps the
+    # workflow reliable without weakening RBAC or opening this endpoint.
+    resolve_operator_or_mcp(
+        session=session,
+        mcp_key=x_blueorch_mcp_key or body.service_key,
+        db=db,
+    )
     incident = update_incident_status(db, incident_id, body.status.value)
     if incident is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Incident {incident_id} not found")
