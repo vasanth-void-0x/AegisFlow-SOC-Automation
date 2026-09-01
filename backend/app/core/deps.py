@@ -30,16 +30,30 @@ require_operator = require_roles(UserRole.admin, UserRole.analyst)
 require_admin = require_roles(UserRole.admin)
 
 
+def resolve_operator_or_mcp(
+    *,
+    session: str | None,
+    mcp_key: str | None,
+    db: Session,
+) -> User:
+    """Resolve a human operator or the scoped n8n/MCP service identity."""
+    settings = get_settings()
+    if (
+        settings.mcp_gateway_api_key
+        and mcp_key
+        and hmac.compare_digest(mcp_key, settings.mcp_gateway_api_key)
+    ):
+        return User(id="MCP-SERVICE", username="n8n_mcp", display_name="n8n MCP", password_hash="", role=UserRole.analyst, is_active=True)
+    user = get_current_user(session=session, db=db)
+    if user.role not in (UserRole.admin, UserRole.analyst):
+        raise HTTPException(status_code=403, detail="Insufficient role")
+    return user
+
+
 def require_operator_or_mcp(
     session: str | None = Cookie(default=None, alias=COOKIE_NAME),
     x_blueorch_mcp_key: str | None = Header(default=None),
     db: Session = Depends(get_db),
 ) -> User:
     """Allow a human operator session or the scoped n8n/MCP service key."""
-    settings = get_settings()
-    if settings.mcp_gateway_api_key and x_blueorch_mcp_key and hmac.compare_digest(x_blueorch_mcp_key, settings.mcp_gateway_api_key):
-        return User(id="MCP-SERVICE", username="n8n_mcp", display_name="n8n MCP", password_hash="", role=UserRole.analyst, is_active=True)
-    user = get_current_user(session=session, db=db)
-    if user.role not in (UserRole.admin, UserRole.analyst):
-        raise HTTPException(status_code=403, detail="Insufficient role")
-    return user
+    return resolve_operator_or_mcp(session=session, mcp_key=x_blueorch_mcp_key, db=db)
