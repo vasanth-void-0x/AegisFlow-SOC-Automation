@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
 from app.database.session import get_db
+from app.models.incident import Severity
 from app.models.log_agent import LogAgent
 from app.schemas.direct_log import (
     AgentHeartbeatIn, AgentRegisterIn, AgentRegisteredOut, AgentStatusOut,
@@ -85,18 +86,27 @@ def agent_heartbeat(body: AgentHeartbeatIn, request: Request, agent: LogAgent = 
 
 @router.post("/agents/logs/bulk", response_model=DirectLogBatchOut)
 def ingest_agent_batch(body: DirectLogBatchIn, agent: LogAgent = Depends(get_agent), db: Session = Depends(get_db)) -> DirectLogBatchOut:
-    incidents, duplicates = [], 0
+    incidents, duplicates, filtered = [], 0, 0
     for log in body.logs:
         log.source_type = "agent"
         log.source_name = agent.name
+        alert = normalize_direct_log(log)
+        # Informational endpoint telemetry still updates the agent counter and
+        # heartbeat, but it must not inflate incident KPIs or consume AI triage.
+        if alert.severity == Severity.low:
+            filtered += 1
+            continue
         try:
-            incidents.append(create_incident_from_alert(db, normalize_direct_log(log)))
+            incidents.append(create_incident_from_alert(db, alert))
         except DuplicateAlertError:
             duplicates += 1
     agent.last_seen_at = datetime.now(timezone.utc)
     agent.events_received += len(body.logs)
     db.commit()
-    return DirectLogBatchOut(accepted=len(incidents), duplicates=duplicates, incidents=[IncidentOut.model_validate(item) for item in incidents])
+    return DirectLogBatchOut(
+        accepted=len(incidents), duplicates=duplicates, filtered=filtered,
+        incidents=[IncidentOut.model_validate(item) for item in incidents],
+    )
 
 
 def verify_collector_key(x_blueorch_key: str | None = Header(default=None)) -> None:
@@ -139,5 +149,6 @@ def ingest_direct_log_batch(body: DirectLogBatchIn, _: None = Depends(verify_col
     return DirectLogBatchOut(
         accepted=len(incidents),
         duplicates=duplicates,
+        filtered=0,
         incidents=[IncidentOut.model_validate(item) for item in incidents],
     )
