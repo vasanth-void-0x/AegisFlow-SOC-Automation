@@ -95,7 +95,11 @@ def run(config: dict, once: bool = False) -> None:
                 result = request(config, "/api/v1/agents/logs/bulk", {"logs": batch})
                 spool = spool[len(batch):]
                 save_json(spool_path, spool)
-                print(f"sent={result['accepted']} duplicates={result['duplicates']} queued={len(spool)}", flush=True)
+                print(
+                    f"incidents={result['accepted']} filtered={result.get('filtered', 0)} "
+                    f"duplicates={result['duplicates']} queued={len(spool)}",
+                    flush=True,
+                )
         except Exception as exc:
             save_json(spool_path, spool)
             print(f"collector retry: {exc}", flush=True)
