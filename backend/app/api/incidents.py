@@ -45,6 +45,7 @@ def get_incidents(
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=20, ge=1, le=100),
     severity: Severity | None = Query(default=None),
+    minimum_severity: Severity | None = Query(default=None),
     status_filter: IncidentStatus | None = Query(default=None, alias="status"),
     source: str | None = Query(default=None),
     db: Session = Depends(get_db),
@@ -55,6 +56,7 @@ def get_incidents(
         page=page,
         page_size=page_size,
         severity=severity.value if severity else None,
+        minimum_severity=minimum_severity.value if minimum_severity else None,
         status=status_filter.value if status_filter else None,
         source=source,
     )
