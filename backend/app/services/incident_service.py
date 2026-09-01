@@ -120,6 +120,7 @@ def list_incidents(
     page: int = 1,
     page_size: int = 20,
     severity: str | None = None,
+    minimum_severity: str | None = None,
     status: str | None = None,
     source: str | None = None,
 ) -> tuple[list[Incident], int]:
@@ -129,6 +130,11 @@ def list_incidents(
     if severity:
         query = query.where(Incident.severity == severity)
         count_query = count_query.where(Incident.severity == severity)
+    if minimum_severity:
+        ranks = {"low": 0, "medium": 1, "high": 2, "critical": 3}
+        allowed = [name for name, rank in ranks.items() if rank >= ranks[minimum_severity]]
+        query = query.where(Incident.severity.in_(allowed))
+        count_query = count_query.where(Incident.severity.in_(allowed))
     if status:
         query = query.where(Incident.status == status)
         count_query = count_query.where(Incident.status == status)
