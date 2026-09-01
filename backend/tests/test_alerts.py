@@ -103,6 +103,23 @@ def test_list_incidents_filter_by_severity(client):
     assert body["items"][0]["severity"] == "low"
 
 
+def test_list_incidents_filter_by_minimum_severity(client):
+    for severity in ("low", "medium", "high", "critical"):
+        alert = dict(
+            VALID_ALERT,
+            idempotency_key=f"evt-minimum-{severity}",
+            alert_name=f"{severity.title()} event",
+            severity=severity,
+        )
+        client.post("/api/v1/alerts", json=alert)
+
+    resp = client.get("/api/v1/incidents?status=new&minimum_severity=medium&page_size=10")
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["total"] == 3
+    assert {item["severity"] for item in body["items"]} == {"medium", "high", "critical"}
+
+
 def test_ingest_alert_with_invalid_indicator_type_returns_422(client):
     bad_alert = dict(VALID_ALERT, indicators=[{"type": "carrier_pigeon", "value": "x"}])
     resp = client.post("/api/v1/alerts", json=bad_alert)
