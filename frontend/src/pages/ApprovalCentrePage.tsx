@@ -4,13 +4,14 @@ import { api } from '../api/client'
 import type { ResponseProposal } from '../api/types'
 import { Panel, LoadingState, ErrorState, EmptyState } from '../components/Panel'
 import { StatusBadge } from '../components/StatusBadge'
+import { useAuth } from '../auth/AuthContext'
 
 export function ApprovalCentrePage() {
+  const { user, canOperate } = useAuth()
   const [proposals, setProposals] = useState<ResponseProposal[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [statusFilter, setStatusFilter] = useState('pending')
   const [busyId, setBusyId] = useState<string | null>(null)
-  const [approver, setApprover] = useState('analyst@soc')
 
   const load = () =>
     api
@@ -27,9 +28,9 @@ export function ApprovalCentrePage() {
     if (!reason) return
     setBusyId(id)
     try {
-      if (action === 'approve') await api.approveProposal(id, approver, reason)
-      else if (action === 'reject') await api.rejectProposal(id, approver, reason)
-      else await api.rollbackProposal(id, approver, reason)
+      if (action === 'approve') await api.approveProposal(id, user?.username || 'analyst', reason)
+      else if (action === 'reject') await api.rejectProposal(id, user?.username || 'analyst', reason)
+      else await api.rollbackProposal(id, user?.username || 'analyst', reason)
       await load()
     } catch (e) {
       setError((e as Error).message)
@@ -47,12 +48,9 @@ export function ApprovalCentrePage() {
             AI recommends → human reviews → human approves → system executes. No action runs without approval.
           </p>
         </div>
-        <input
-          value={approver}
-          onChange={(e) => setApprover(e.target.value)}
-          className="rounded border border-[var(--color-graphite)] bg-[var(--color-steel)] px-3 py-1.5 text-xs font-mono"
-          title="Your analyst identity, used when approving/rejecting"
-        />
+        <div className="rounded border border-[var(--color-graphite)] bg-[var(--color-steel)] px-3 py-1.5 text-xs font-mono">
+          {user?.username} · {user?.role.toUpperCase()}
+        </div>
       </header>
 
       <div className="mb-4 flex gap-2">
@@ -90,7 +88,7 @@ export function ApprovalCentrePage() {
                 </Link>
               </div>
               <StatusBadge status={p.status} />
-              {p.status === 'pending' && (
+              {p.status === 'pending' && canOperate && (
                 <div className="flex gap-1.5">
                   <button
                     disabled={busyId === p.id}
@@ -108,7 +106,7 @@ export function ApprovalCentrePage() {
                   </button>
                 </div>
               )}
-              {p.status === 'executed' && (
+              {p.status === 'executed' && canOperate && (
                 <button
                   disabled={busyId === p.id}
                   onClick={() => act(p.id, 'rollback')}

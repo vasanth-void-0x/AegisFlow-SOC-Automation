@@ -2,6 +2,7 @@ import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { api } from '../api/client'
 import type { HealthStatus, ResponseProposal } from '../api/types'
+import { useAuth } from '../auth/AuthContext'
 
 const NAV_ITEMS = [
   { to: '/', label: 'Command Overview', end: true, icon: 'grid' },
@@ -41,6 +42,7 @@ function ProcessorNodes(){
 }
 
 export function AppShell() {
+  const { user, canOperate } = useAuth()
   const [health,setHealth]=useState<HealthStatus|null>(null)
   const [healthError,setHealthError]=useState(false)
   const [mobileNavOpen,setMobileNavOpen]=useState(false)
@@ -53,7 +55,7 @@ export function AppShell() {
   useEffect(()=>{let cancelled=false;const poll=()=>api.listApprovals({status:'pending'}).then(items=>!cancelled&&setPendingApprovals(items)).catch(()=>undefined);poll();const timer=setInterval(poll,30000);return()=>{cancelled=true;clearInterval(timer)}},[])
   const healthLabel=healthError?'Backend offline':health?.status==='ok'?'All systems operational':'Checking systems'
   const currentTitle=location.pathname.startsWith('/incidents/')?'Incident Investigation':PAGE_TITLES[location.pathname]||'BlueOrch'
-  const decide=async(action:'approve'|'reject',proposal:ResponseProposal)=>{setDecisionBusy(action);try{if(action==='approve')await api.approveProposal(proposal.id,'VK','Approved from BlueOrch Action Center');else await api.rejectProposal(proposal.id,'VK','Rejected from BlueOrch Action Center');setPendingApprovals(items=>items.filter(item=>item.id!==proposal.id))}finally{setDecisionBusy(null)}}
+  const decide=async(action:'approve'|'reject',proposal:ResponseProposal)=>{if(!canOperate)return;setDecisionBusy(action);try{if(action==='approve')await api.approveProposal(proposal.id,user?.username||'analyst','Approved from BlueOrch Action Center');else await api.rejectProposal(proposal.id,user?.username||'analyst','Rejected from BlueOrch Action Center');setPendingApprovals(items=>items.filter(item=>item.id!==proposal.id))}finally{setDecisionBusy(null)}}
   return <div className="app-frame">
     {location.pathname==='/'&&<div className="aegis-bg-scene" aria-hidden="true"><MatrixRain/><div className="aegis-bg-picture"/><div className="core-energy"><span/></div><div className="core-startup-scan"/><ProcessorNodes/></div>}
     <div className="mobile-bar"><button onClick={()=>setMobileNavOpen(true)} aria-label="Open navigation"><Icon name="grid"/></button><span>BLUEORCH</span></div>

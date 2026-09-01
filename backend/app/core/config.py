@@ -9,20 +9,8 @@ from functools import lru_cache
 import os
 from typing import List
 
-from pydantic import Field, ValidationInfo, field_validator
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
-
-BLANK_NUMERIC_DEFAULTS = {
-    "max_request_body_bytes": 1_000_000,
-    "rate_limit_per_minute": 120,
-    "enrichment_cache_ttl_seconds": 3600,
-    "enrichment_timeout_seconds": 5.0,
-    "rag_relevance_threshold": 0.35,
-    "approval_expiry_minutes": 30,
-    "mcp_tool_timeout_seconds": 10.0,
-    "siem_request_timeout_seconds": 15.0,
-    "siem_sync_limit": 500,
-}
 
 
 class Settings(BaseSettings):
@@ -39,30 +27,20 @@ class Settings(BaseSettings):
         default="sqlite:////tmp/blueorch.db" if os.getenv("VERCEL") else "sqlite:///./blueorch.db"
     )
 
-    @field_validator("database_url", mode="before")
-    @classmethod
-    def use_writable_database_url(cls, value: object) -> object:
-        """Use a valid writable SQLite URL when deployment configuration is blank."""
-        if value in ("", None):
-            return "sqlite:////tmp/blueorch.db" if os.getenv("VERCEL") else "sqlite:///./blueorch.db"
-        if os.getenv("VERCEL") and isinstance(value, str) and value.startswith("sqlite") and "/tmp/" not in value:
-            return "sqlite:////tmp/blueorch.db"
-        if isinstance(value, str) and value.startswith("postgres://"):
-            return value.replace("postgres://", "postgresql+psycopg://", 1)
-        if isinstance(value, str) and value.startswith("postgresql://"):
-            return value.replace("postgresql://", "postgresql+psycopg://", 1)
-        return value
-
-    @field_validator(*BLANK_NUMERIC_DEFAULTS.keys(), mode="before")
-    @classmethod
-    def blank_numeric_setting_uses_default(cls, value: object, info: ValidationInfo) -> object:
-        """Treat empty deployment variables as their documented safe defaults."""
-        return BLANK_NUMERIC_DEFAULTS[info.field_name] if value in ("", None) else value
-
     # --- Security ---
     cors_allowed_origins: List[str] = Field(default_factory=lambda: ["http://localhost:5173"])
     max_request_body_bytes: int = Field(default=1_000_000)  # 1 MB
     rate_limit_per_minute: int = Field(default=120)
+    auth_enabled: bool = Field(default=False)
+    auth_secret: str = Field(default="")
+    auth_session_hours: int = Field(default=8)
+    auth_admin_username: str = Field(default="admin")
+    auth_admin_password: str = Field(default="")
+    auth_analyst_username: str = Field(default="analyst")
+    auth_analyst_password: str = Field(default="")
+    auth_viewer_username: str = Field(default="viewer")
+    auth_viewer_password: str = Field(default="")
+    automation_api_key: str = Field(default="")
 
     # --- AI / Groq ---
     groq_api_key: str = Field(default="")

@@ -1,12 +1,13 @@
 """Phase 4 API: SOC runbook RAG retrieval."""
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Depends, Query
 
+from app.core.auth import require_admin, require_viewer
 from app.rag.retriever import format_citation, index_runbooks, retrieve_runbook
 
-router = APIRouter(tags=["runbooks"])
+router = APIRouter(tags=["runbooks"], dependencies=[Depends(require_viewer)])
 
 
-@router.post("/runbooks/index")
+@router.post("/runbooks/index", dependencies=[Depends(require_admin)])
 def reindex_runbooks() -> dict:
     """Force re-indexing of runbooks (e.g. after editing a runbook file)."""
     return index_runbooks(force=True)

@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
+from app.core.auth import require_analyst, require_viewer
 from app.database.session import get_db
 from app.models.incident import IncidentStatus, Severity
 from app.schemas.incident import AlertIngest, IncidentListOut, IncidentOut
@@ -14,7 +15,7 @@ from app.services.incident_service import (
     update_incident_status,
 )
 
-router = APIRouter(tags=["incidents"])
+router = APIRouter(tags=["incidents"], dependencies=[Depends(require_viewer)])
 
 
 class UpdateStatusRequest(BaseModel):
@@ -26,6 +27,7 @@ class UpdateStatusRequest(BaseModel):
     response_model=IncidentOut,
     status_code=status.HTTP_201_CREATED,
     responses={409: {"description": "Duplicate alert"}, 422: {"description": "Validation error"}},
+    dependencies=[Depends(require_analyst)],
 )
 def ingest_alert(alert: AlertIngest, response: Response, db: Session = Depends(get_db)) -> IncidentOut:
     """Ingest a new security alert and create an incident record."""
@@ -83,6 +85,7 @@ def get_incident_by_id(incident_id: str, db: Session = Depends(get_db)) -> Incid
 @router.patch(
     "/incidents/{incident_id}/status",
     response_model=IncidentOut,
+    dependencies=[Depends(require_analyst)],
     responses={404: {"description": "Incident not found"}},
 )
 def patch_incident_status(incident_id: str, body: UpdateStatusRequest, db: Session = Depends(get_db)) -> IncidentOut:

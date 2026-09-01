@@ -2,12 +2,13 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
+from app.core.auth import require_viewer
 from app.database.session import get_db
 from app.services.approval_service import list_proposals
 from app.services.incident_service import get_incident
 from app.services.timeline_service import get_timeline
 
-router = APIRouter(tags=["reports"])
+router = APIRouter(tags=["reports"], dependencies=[Depends(require_viewer)])
 
 
 @router.get("/incidents/{incident_id}/report")

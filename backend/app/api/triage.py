@@ -4,18 +4,20 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.ai.triage_service import run_triage
+from app.core.auth import require_analyst, require_viewer
 from app.database.session import get_db
 from app.models.triage import TriageRecord
 from app.rag.retriever import format_citation, retrieve_runbook
 from app.schemas.triage import TriageRecordOut
 from app.services.incident_service import get_incident
 
-router = APIRouter(tags=["triage"])
+router = APIRouter(tags=["triage"], dependencies=[Depends(require_viewer)])
 
 
 @router.post(
     "/incidents/{incident_id}/triage",
     response_model=TriageRecordOut,
+    dependencies=[Depends(require_analyst)],
     responses={404: {"description": "Incident not found"}},
 )
 async def trigger_triage(incident_id: str, db: Session = Depends(get_db)) -> TriageRecordOut:
