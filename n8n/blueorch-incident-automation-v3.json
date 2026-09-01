@@ -124,7 +124,7 @@
         ]},
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({arguments: {incident_id: $json.incident_id, action_type: $json.action_type, target: $json.target, justification: $json.justification, proposed_by: 'n8n_mcp_v3'}}) }}",
+        "jsonBody": "={{ { arguments: { incident_id: $json.incident_id, action_type: $json.action_type, target: $json.target, justification: $json.justification, proposed_by: 'n8n_mcp_v3' } } }}",
         "options": {"timeout": 15000}
       },
       "id": "mcp-create-proposal",

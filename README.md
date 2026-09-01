@@ -1,18 +1,18 @@
 # BlueOrch — SOC Investigation & Response Automation Platform
 
-[![Live](https://img.shields.io/badge/LIVE-SOC%20DASHBOARD-28d7f2?style=for-the-badge&logo=vercel&logoColor=white)](https://aegisflow-soc-automation.vercel.app/)
+[![Live](https://img.shields.io/badge/LIVE-SOC%20DASHBOARD-28d7f2?style=for-the-badge&logo=vercel&logoColor=white)](https://blueorch-soc-automation.vercel.app/)
 [![React](https://img.shields.io/badge/React-TypeScript-087ea4?style=flat-square&logo=react)](frontend/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-Backend-009688?style=flat-square&logo=fastapi)](backend/)
 [![Tests](https://img.shields.io/badge/Backend%20Tests-127%20Passing-3ecf8e?style=flat-square)](#testing)
 
-### [Launch the live SOC dashboard →](https://aegisflow-soc-automation.vercel.app/)
+### [Launch the live SOC dashboard →](https://blueorch-soc-automation.vercel.app/)
 
 ![BlueOrch SOC Command Center](docs/screenshots/blueorch-command-overview.jpg)
 
 BlueOrch is a working, end-to-end SOC (Security Operations Center) automation platform. It ingests
 alerts from Splunk/Wazuh or receives endpoint logs directly through an agent, webhook, syslog relay, or
 file pipeline. It normalizes events, enriches indicators of compromise, runs structured LLM-based triage, retrieves relevant
-SOC runbooks with RAG, exposes its security tools through MCP, orchestrates the investigation with n8n,
+SOC runbooks with RAG, exposes seven allowlisted security tools through an authenticated remote MCP gateway, orchestrates deep investigation with n8n V3,
 requires human approval before any response action executes, and produces an evidence-linked final report.
 
 **This is a real system, not a demo with static values.** Every screen in the dashboard is backed by a
@@ -42,6 +42,10 @@ evidence-linked SOC automation workflows.
 | 13 | Direct log normalization, deduplication & bulk ingestion | ✅ |
 | 14 | Windows 24×7 Event Log collector, heartbeat & disk retry | ✅ |
 | 15 | Final incident report API | ✅ |
+| 16 | Authenticated remote MCP HTTPS gateway & shared audit executor | ✅ |
+| 17 | Evidence-grounded deep AI investigation | ✅ |
+| 18 | n8n MCP Deep Investigation V3 | ✅ |
+| 19 | End-to-end agent → MCP → approval → contained verification | ✅ |
 
 **127 backend tests passing** in the verified combined FastAPI/MCP test suite.
 
@@ -52,34 +56,35 @@ flowchart TB
     subgraph Ingestion
         A[Splunk / Wazuh] -->|SIEM sync| B[FastAPI Backend]
         O[Endpoint / Server Logs] --> P[BlueOrch Collector]
-        P -->|POST /api/v1/logs/ingest| B
+        P -->|Authenticated heartbeat + bulk events| B
         Q[Webhook / Syslog Relay / File] -->|single or bulk logs| B
     end
 
     subgraph Backend["Backend (FastAPI + SQLAlchemy + SQLite)"]
         B --> C[Incident Store]
         C --> D[Threat-Intel Enrichment<br/>VirusTotal + GeoIP + MITRE]
-        D --> E[AI Triage<br/>Groq structured JSON]
+        D --> E[Deep AI Investigation<br/>Groq structured JSON]
         F[RAG Retriever<br/>SOC Runbooks] --> E
-        E --> G[Response Proposal<br/>pending approval]
+        E --> G[Evidence-based Proposal<br/>pending approval]
         G --> H[Human Approval API]
         H --> I[Simulated Response<br/>block_ip / isolate_host]
         C --> J[Immutable Timeline]
         J --> R[Final Incident Report]
     end
 
-    subgraph MCP["MCP Security Server (isolated process)"]
-        K[7 typed tools] --> C
+    subgraph MCP["Authenticated Remote MCP Gateway"]
+        K[7 typed + allowlisted tools] --> C
         K --> D
         K --> F
         K --> G
+        K --> S[Audited Tool History]
     end
 
     subgraph Orchestration
-        L[n8n Workflow] -->|webhook| B
-        L --> D
+        L[n8n MCP V3] -->|poll + claim| B
+        L -->|X-BlueOrch-MCP-Key| K
         L --> E
-        L --> H
+        L --> G
     end
 
     M[React Dashboard] -->|REST| B
@@ -134,7 +139,7 @@ cp ../.env.example .env   # demo mode works with zero keys
 uvicorn app.main:app --reload --port 8000
 ```
 
-Visit `http://localhost:8000/health` — you should see `{"status": "ok", ...}`.
+Visit `http://localhost:8000/api/v1/health` — you should see `{"status": "ok", ...}`.
 Interactive API docs: `http://localhost:8000/docs`.
 
 ### 2. Frontend
@@ -190,7 +195,7 @@ PowerShell**, then install the 24×7 collector:
 
 ```powershell
 .\install_windows.ps1 `
-  -ApiUrl "https://aegisflow-soc-automation.vercel.app" `
+  -ApiUrl "https://blueorch-soc-automation.vercel.app" `
   -ApiKey "boa_COPY_THE_ONE_TIME_KEY" `
   -SourceName "BLUEORCH-WIN-01" `
   -Profile "security"
@@ -252,16 +257,18 @@ See [evaluation/eval_report.md](evaluation/eval_report.md) for the latest run.
   *content* of a still-schema-valid response, never bypass approval requirements (tested explicitly).
 - Secret leakage — MCP audit logs and error messages are redacted (`app/mcp_server/redaction.py`);
   tested that API keys never appear in health checks or validation error bodies.
-- Unauthorized/duplicate response actions — every response proposal requires human approval; approved
+- Unauthorized response actions — every response proposal requires human approval; approved
   proposals cannot be re-approved; rejected/expired proposals cannot execute.
+- Remote MCP abuse — gateway calls require `X-BlueOrch-MCP-Key`, tools are allowlisted and typed,
+  execution is time-limited, sensitive fields are redacted, and success/failure is written to MCP Tool History.
 - Oversized payloads / malformed JSON — request size limits and structured 422/413 handling.
 - Rate limiting — per-IP sliding window middleware (configurable, default 120 req/min).
 - Remote direct-log collection — optional `X-BlueOrch-Key` verification, payload limits,
   normalization, and event-id/fingerprint deduplication.
 
 **Explicitly out of scope for this portfolio build:**
-- User authentication/authorization and RBAC are not implemented. Direct-log collectors can use an API
-  key, but a production deployment still needs an identity-aware gateway in front of analyst APIs.
+- The environment-backed Admin/Analyst/Viewer login is suitable for this portfolio deployment; a
+  multi-user production SOC should replace it with an enterprise identity provider and managed sessions.
 - Multi-tenant isolation.
 - Encryption at rest for the SQLite database.
 - The `ENABLE_REAL_RESPONSE_ADAPTER` flag exists but no real adapter is implemented — response actions
@@ -269,10 +276,9 @@ See [evaluation/eval_report.md](evaluation/eval_report.md) for the latest run.
 
 ## Known limitations & honest notes
 
-- **No live Groq/VirusTotal keys were used during development in this sandboxed environment** — those
-  provider domains aren't reachable from the build environment's network policy. The live-API code paths
-  are fully implemented and unit-tested with mocked HTTP responses, but have not been exercised against
-  the real Groq/VirusTotal APIs. Bring your own keys locally to use them.
+- **Provider-dependent enrichment:** the deployed Groq deep-investigation and remote MCP paths have been
+  exercised end to end. VirusTotal reports an explicit live, not-configured, rate-limited, or provider-error
+  state; a valid key is required for live reputation results and no fallback is presented as VirusTotal data.
 - **Docker images are syntax-validated, not build-tested** — Docker itself isn't available in the sandbox
   this was built in. The Dockerfiles and `docker-compose.yml` follow standard, well-tested patterns, but
   run `docker compose up --build` locally before relying on them in production.
@@ -299,13 +305,15 @@ See [evaluation/eval_report.md](evaluation/eval_report.md) for the latest run.
 ## End-to-end automation flow
 
 ```text
-SIEM or Direct Log → Normalize & Deduplicate → Incident → IOC Enrichment → AI Triage
-→ Human Approval → Simulated Response → Contained → Final Report
+SIEM or Endpoint Agent → Normalize & Deduplicate → Incident → n8n V3 Claim
+→ Remote MCP Evidence → Deep AI Investigation → Response Proposal
+→ Human Approval → Simulated Response → Contained → Immutable Audit
 ```
 
-The n8n production webhook is `POST /webhook/blueorch-alert`. High/critical recommendations
-create a pending response proposal; only BlueOrch's approval service can execute it. The final
-report is available from `GET /api/v1/incidents/{incident_id}/report`.
+The current V3 workflow polls durable incidents, invokes the authenticated MCP gateway, and creates
+proposals only for usable high/critical true-positive investigations. Low/medium or uncertain results
+remain with the analyst. Only BlueOrch's approval service can execute a proposal. The final report is
+available from `GET /api/v1/incidents/{incident_id}/report`.
 
 ## Screenshots
 
@@ -330,6 +338,34 @@ connection testing, TLS verification, index selection, manual synchronization, a
 The second ingestion mode registers a device-specific key and reports real online/offline state. The
 dependency-free collector reads Windows Event Logs, sends authenticated HTTPS batches and heartbeats,
 deduplicates by record ID, and retains an on-disk retry queue through network interruptions.
+
+### 24/7 collector online
+
+![BlueOrch Windows collector online](docs/screenshots/blueorch-agent-online.png)
+
+The registered Windows collector reports a live heartbeat, device identity and event count while its
+scheduled task continues collection in the background.
+
+### n8n MCP Deep Investigation V3
+
+![BlueOrch n8n MCP V3 successful execution](docs/screenshots/blueorch-n8n-mcp-v3-success.png)
+
+This verified execution claimed a high-risk incident, completed the MCP evidence pipeline, produced an
+evidence-based response, created a proposal and stopped at the human approval gate.
+
+### Remote MCP tool audit
+
+![BlueOrch MCP tool history](docs/screenshots/blueorch-mcp-tool-history.png)
+
+Every allowlisted call is timed and audited, including incident retrieval, related-incident search,
+MITRE mapping, SOC runbook retrieval and response-proposal creation.
+
+### Human-approved response and immutable audit
+
+![BlueOrch contained incident audit trail](docs/screenshots/blueorch-audit-contained.png)
+
+The audit trail records proposal creation, analyst approval, simulated execution and the final
+`contained` transition. No firewall, EDR or IAM action is represented as real in the current version.
 
 > The interface is optimized for desktop security operations. Live provider features depend on the
 > environment variables documented above; response actions remain intentionally simulated.
