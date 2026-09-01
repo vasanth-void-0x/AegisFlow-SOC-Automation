@@ -14,7 +14,15 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+    # Vercel permits variables to exist with an empty value. Treat those as
+    # unset so optional numeric/bool/list settings use their safe defaults
+    # instead of crashing the serverless function during Settings creation.
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        env_ignore_empty=True,
+        extra="ignore",
+    )
 
     # --- App ---
     app_name: str = "BlueOrch"

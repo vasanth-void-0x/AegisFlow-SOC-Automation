@@ -18,7 +18,17 @@ def _out(principal: Principal) -> dict:
 
 @router.get("/config")
 def auth_config() -> dict:
-    return {"enabled": get_settings().auth_enabled}
+    settings = get_settings()
+    return {
+        "enabled": settings.auth_enabled,
+        "ready": bool(
+            len(settings.auth_secret) >= 32
+            and settings.auth_admin_password
+            and settings.auth_analyst_password
+            and settings.auth_viewer_password
+            and settings.automation_api_key
+        ) if settings.auth_enabled else True,
+    }
 
 
 @router.post("/login")
