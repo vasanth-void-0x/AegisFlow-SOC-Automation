@@ -33,6 +33,7 @@
         "queryParameters": {
           "parameters": [
             {"name": "status", "value": "new"},
+            {"name": "minimum_severity", "value": "medium"},
             {"name": "page", "value": "1"},
             {"name": "page_size", "value": "1"}
           ]
