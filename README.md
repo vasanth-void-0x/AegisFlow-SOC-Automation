@@ -7,7 +7,7 @@
 
 ### [Launch the live SOC dashboard →](https://blueorch-soc-automation.vercel.app/)
 
-![BlueOrch SOC Command Center](docs/screenshots/blueorch-command-overview.jpg)
+![BlueOrch SOC Command Center](docs/screenshots/blueorch-live-command-overview.jpg)
 
 BlueOrch is a working, end-to-end SOC (Security Operations Center) automation platform. It ingests
 alerts from Splunk/Wazuh or receives endpoint logs directly through an agent, webhook, syslog relay, or
@@ -317,55 +317,67 @@ available from `GET /api/v1/incidents/{incident_id}/report`.
 
 ## Screenshots
 
+The screenshots below were captured directly from the live production deployment after the verified
+MCP V3 end-to-end run; they are not mockups or locally substituted dashboard images.
+
 ### SOC Command Center
 
-![BlueOrch live SOC overview](docs/screenshots/blueorch-command-overview.jpg)
+![BlueOrch live SOC overview](docs/screenshots/blueorch-live-command-overview.jpg)
 
 The live overview presents the SIEM → enrichment → AI triage → investigation → approval → response
-pipeline alongside system readiness, incident telemetry, MCP/RAG integrations, and fixed SOC rails.
+pipeline alongside production incident telemetry, MCP/RAG integrations and the human approval rail.
+
+### Live incident queue
+
+![BlueOrch live incident queue](docs/screenshots/blueorch-live-incident-queue.jpg)
+
+The incident queue is populated from backend telemetry and shows the verified MCP investigation tests,
+severity, response state and endpoint source without static frontend counters.
 
 ### Security data sources — Splunk and Wazuh
 
-![BlueOrch SIEM settings with Splunk and Wazuh](docs/screenshots/blueorch-settings-siem.jpg)
+![BlueOrch SIEM settings with Splunk and Wazuh](docs/screenshots/blueorch-live-siem-settings.jpg)
 
 The Settings workspace supports encrypted Splunk Management API and Wazuh Indexer connections,
 connection testing, TLS verification, index selection, manual synchronization, and a live SIEM signal.
 
 ### Direct logs — Windows collector
 
-![BlueOrch direct log agent setup](docs/screenshots/blueorch-settings-direct-agent.jpg)
+![BlueOrch direct log agent setup](docs/screenshots/blueorch-live-direct-log-settings.jpg)
 
 The second ingestion mode registers a device-specific key and reports real online/offline state. The
 dependency-free collector reads Windows Event Logs, sends authenticated HTTPS batches and heartbeats,
-deduplicates by record ID, and retains an on-disk retry queue through network interruptions.
+deduplicates by record ID, and retains an on-disk retry queue through network interruptions. Device
+status is visible after the operator supplies the registration token; the token is never embedded in
+screenshots or returned by the backend.
 
-### 24/7 collector online
+### Human approval centre
 
-![BlueOrch Windows collector online](docs/screenshots/blueorch-agent-online.png)
+![BlueOrch live human approval centre](docs/screenshots/blueorch-live-approval-centre.jpg)
 
-The registered Windows collector reports a live heartbeat, device identity and event count while its
-scheduled task continues collection in the background.
-
-### n8n MCP Deep Investigation V3
-
-![BlueOrch n8n MCP V3 successful execution](docs/screenshots/blueorch-n8n-mcp-v3-success.png)
-
-This verified execution claimed a high-risk incident, completed the MCP evidence pipeline, produced an
-evidence-based response, created a proposal and stopped at the human approval gate.
+High-risk recommendations stop here. The system exposes the proposed action, target, evidence summary
+and incident reference; only an analyst can approve or reject execution.
 
 ### Remote MCP tool audit
 
-![BlueOrch MCP tool history](docs/screenshots/blueorch-mcp-tool-history.png)
+![BlueOrch MCP tool history](docs/screenshots/blueorch-live-mcp-history.jpg)
 
 Every allowlisted call is timed and audited, including incident retrieval, related-incident search,
 MITRE mapping, SOC runbook retrieval and response-proposal creation.
 
 ### Human-approved response and immutable audit
 
-![BlueOrch contained incident audit trail](docs/screenshots/blueorch-audit-contained.png)
+![BlueOrch contained incident audit trail](docs/screenshots/blueorch-live-audit-log.jpg)
 
 The audit trail records proposal creation, analyst approval, simulated execution and the final
 `contained` transition. No firewall, EDR or IAM action is represented as real in the current version.
+
+### Production system health
+
+![BlueOrch live production system health](docs/screenshots/blueorch-live-system-health.jpg)
+
+The health view polls the real backend and confirms the production environment, database connectivity
+and that demo mode is disabled.
 
 > The interface is optimized for desktop security operations. Live provider features depend on the
 > environment variables documented above; response actions remain intentionally simulated.
