@@ -35,7 +35,12 @@ async def lifespan(app: FastAPI):
     # Dev convenience: auto-create tables when using SQLite so `uvicorn app.main:app`
     # works out of the box. Alembic migrations are the source of truth otherwise.
     if settings.database_url.startswith("sqlite"):
-        Base.metadata.create_all(bind=engine)
+        try:
+            Base.metadata.create_all(bind=engine)
+        except Exception:
+            # Auth/config and health endpoints must remain available even when
+            # an ephemeral database initialization fails in a serverless cold start.
+            logger.exception("Database initialization failed during startup")
     logger.info("BlueOrch started | demo_mode=%s | env=%s", settings.demo_mode, settings.environment)
     yield
 
