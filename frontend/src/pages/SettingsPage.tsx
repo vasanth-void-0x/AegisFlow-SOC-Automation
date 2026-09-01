@@ -96,32 +96,6 @@ function DirectLogSetup() {
   const [agents, setAgents] = useState<LogAgentStatus[]>([])
   const [directNotice, setDirectNotice] = useState<{kind:'ok'|'error';text:string}|null>(null)
   const [registering, setRegistering] = useState(false)
-
-  useEffect(() => {
-    const token = registrationToken.trim()
-    if (!token) {
-      setAgents([])
-      return
-    }
-    let active = true
-    const refreshAgents = async () => {
-      try {
-        const result = await api.listLogAgents(token)
-        if (active) setAgents(result)
-      } catch {
-        // Manual refresh surfaces authentication/network errors to the operator.
-      }
-    }
-    void refreshAgents()
-    const timer = window.setInterval(() => void refreshAgents(), 15_000)
-    return () => {
-      active = false
-      window.clearInterval(timer)
-    }
-  }, [registrationToken])
-
-  const primaryAgent = agents.find(item => item.status === 'online') ?? agents[0]
-  const agentOnline = agents.some(item => item.status === 'online')
   const methods: { id: DirectMethod; icon: string; title: string; detail: string }[] = [
     { id: 'agent', icon: '24', title: '24/7 Live Agent', detail: 'Windows · Linux devices' },
     { id: 'webhook', icon: '{}', title: 'JSON Webhook', detail: 'Apps · EDR · Cloud alerts' },
@@ -158,7 +132,7 @@ function DirectLogSetup() {
       </div>
     </section>
     <aside className="connection-summary direct-summary">
-      <div className="summary-signal"><span className={agentOnline?'on':''}/><div><small>24/7 COLLECTOR SIGNAL</small><b>{agentOnline?'AGENT ONLINE':'AGENT OFFLINE'}</b><p>{primaryAgent?`${primaryAgent.name} · ${primaryAgent.events_received} events · ${formatTime(primaryAgent.last_seen_at)}`:'Enter the registration token to load device status'}</p></div></div>
+      <div className="summary-signal"><span className={agents.some(item=>item.status==='online')?'on':''}/><div><small>24/7 COLLECTOR SIGNAL</small><b>{agents.some(item=>item.status==='online')?'AGENT ONLINE':'AGENT OFFLINE'}</b><p>{agents[0]?`${agents[0].name} · ${agents[0].events_received} events · ${formatTime(agents[0].last_seen_at)}`:'Register and start one Windows device'}</p></div></div>
       <div className="direct-pipeline">
         <span><i>01</i><b>Collect Continuously</b><small>Background agent watches device logs</small></span>
         <span><i>02</i><b>Send Securely</b><small>HTTPS with a unique device API key</small></span>
@@ -166,7 +140,7 @@ function DirectLogSetup() {
         <span><i>04</i><b>AI Investigation</b><small>Create incidents and request approval</small></span>
       </div>
       <div className="direct-security-note"><b>RAW LOG SAFETY</b><p>Telemetry is validated, size-limited, normalized and stored as canonical incident evidence.</p></div>
-      <p className="credential-note">Install: clone/download the repository, open collector in Administrator PowerShell, then run <b>.\install_windows.ps1 -ApiUrl https://aegisflow-soc-automation.vercel.app -ApiKey YOUR_KEY -SourceName {sourceName} -Profile {profile}</b></p>
+      <p className="credential-note">Install: clone/download the repository, open collector in Administrator PowerShell, then run <b>.\install_windows.ps1 -ApiUrl https://blueorch-soc-automation.vercel.app -ApiKey YOUR_KEY -SourceName {sourceName} -Profile {profile}</b>. Events are stored in BlueOrch first; n8n V2 processes incidents from the backend.</p>
     </aside>
   </div>
 }
