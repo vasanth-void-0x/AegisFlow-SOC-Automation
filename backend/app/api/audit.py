@@ -5,12 +5,11 @@ from pydantic import BaseModel, ConfigDict
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.core.auth import require_viewer
 from app.database.session import get_db
 from app.models.mcp_audit import McpToolCallLog
 from app.models.timeline import TimelineEvent
 
-router = APIRouter(tags=["audit"], dependencies=[Depends(require_viewer)])
+router = APIRouter(tags=["audit"])
 
 
 class McpToolCallLogOut(BaseModel):

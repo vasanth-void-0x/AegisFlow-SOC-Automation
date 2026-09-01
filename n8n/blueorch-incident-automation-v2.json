@@ -16,10 +16,7 @@
       "name": "Poll Every 15 Seconds",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
-      "position": [
-        -900,
-        120
-      ]
+      "position": [-900, 120]
     },
     {
       "parameters": {},
@@ -27,10 +24,7 @@
       "name": "Manual Test",
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
-      "position": [
-        -900,
-        300
-      ]
+      "position": [-900, 300]
     },
     {
       "parameters": {
@@ -38,45 +32,19 @@
         "sendQuery": true,
         "queryParameters": {
           "parameters": [
-            {
-              "name": "status",
-              "value": "new"
-            },
-            {
-              "name": "minimum_severity",
-              "value": "medium"
-            },
-            {
-              "name": "page",
-              "value": "1"
-            },
-            {
-              "name": "page_size",
-              "value": "1"
-            }
+            {"name": "status", "value": "new"},
+            {"name": "minimum_severity", "value": "medium"},
+            {"name": "page", "value": "1"},
+            {"name": "page_size", "value": "1"}
           ]
         },
-        "options": {
-          "timeout": 10000
-        },
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "X-BlueOrch-Automation-Key",
-              "value": "={{$env.BLUEORCH_AUTOMATION_KEY}}"
-            }
-          ]
-        }
+        "options": {"timeout": 10000}
       },
       "id": "fetch-new-incidents",
       "name": "Fetch Next New Incident",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [
-        -660,
-        210
-      ],
+      "position": [-660, 210],
       "retryOnFail": true,
       "maxTries": 3,
       "waitBetweenTries": 2000
@@ -89,10 +57,7 @@
       "name": "Select Next Incident",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        -420,
-        210
-      ]
+      "position": [-420, 210]
     },
     {
       "parameters": {
@@ -101,27 +66,13 @@
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={\"status\":\"triaging\"}",
-        "options": {
-          "timeout": 10000
-        },
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "X-BlueOrch-Automation-Key",
-              "value": "={{$env.BLUEORCH_AUTOMATION_KEY}}"
-            }
-          ]
-        }
+        "options": {"timeout": 10000}
       },
       "id": "claim-incident",
       "name": "Claim Incident - Triaging",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [
-        -180,
-        210
-      ],
+      "position": [-180, 210],
       "retryOnFail": true,
       "maxTries": 3,
       "waitBetweenTries": 2000
@@ -129,27 +80,13 @@
     {
       "parameters": {
         "url": "=https://blueorch-soc-automation.vercel.app/api/v1/incidents/{{$('Select Next Incident').item.json.id}}/enrichment",
-        "options": {
-          "timeout": 20000
-        },
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "X-BlueOrch-Automation-Key",
-              "value": "={{$env.BLUEORCH_AUTOMATION_KEY}}"
-            }
-          ]
-        }
+        "options": {"timeout": 20000}
       },
       "id": "enrich-incident",
       "name": "AI Investigation - Enrich IOCs",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [
-        60,
-        210
-      ],
+      "position": [60, 210],
       "retryOnFail": true,
       "maxTries": 2,
       "waitBetweenTries": 3000,
@@ -159,27 +96,13 @@
       "parameters": {
         "method": "POST",
         "url": "=https://blueorch-soc-automation.vercel.app/api/v1/incidents/{{$('Select Next Incident').item.json.id}}/triage",
-        "options": {
-          "timeout": 45000
-        },
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "X-BlueOrch-Automation-Key",
-              "value": "={{$env.BLUEORCH_AUTOMATION_KEY}}"
-            }
-          ]
-        }
+        "options": {"timeout": 45000}
       },
       "id": "run-ai-triage",
       "name": "Run Groq AI Triage",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [
-        300,
-        210
-      ],
+      "position": [300, 210],
       "retryOnFail": true,
       "maxTries": 2,
       "waitBetweenTries": 5000
@@ -192,26 +115,17 @@
       "name": "Build Investigation Result",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        540,
-        210
-      ]
+      "position": [540, 210]
     },
     {
       "parameters": {
         "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "typeValidation": "strict"
-          },
+          "options": {"caseSensitive": true, "typeValidation": "strict"},
           "conditions": [
             {
               "leftValue": "={{$json.usable}}",
               "rightValue": true,
-              "operator": {
-                "type": "boolean",
-                "operation": "equals"
-              }
+              "operator": {"type": "boolean", "operation": "equals"}
             }
           ],
           "combinator": "and"
@@ -221,26 +135,17 @@
       "name": "Triage Result Usable?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
-      "position": [
-        780,
-        210
-      ]
+      "position": [780, 210]
     },
     {
       "parameters": {
         "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "typeValidation": "strict"
-          },
+          "options": {"caseSensitive": true, "typeValidation": "strict"},
           "conditions": [
             {
               "leftValue": "={{$json.needs_approval}}",
               "rightValue": true,
-              "operator": {
-                "type": "boolean",
-                "operation": "equals"
-              }
+              "operator": {"type": "boolean", "operation": "equals"}
             }
           ],
           "combinator": "and"
@@ -250,10 +155,7 @@
       "name": "Approval Required?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
-      "position": [
-        1020,
-        120
-      ]
+      "position": [1020, 120]
     },
     {
       "parameters": {
@@ -262,27 +164,13 @@
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify({action_type: $json.action_type, target: $json.target, justification: $json.justification, proposed_by: 'n8n_incident_automation_v2'}) }}",
-        "options": {
-          "timeout": 10000
-        },
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "X-BlueOrch-Automation-Key",
-              "value": "={{$env.BLUEORCH_AUTOMATION_KEY}}"
-            }
-          ]
-        }
+        "options": {"timeout": 10000}
       },
       "id": "create-proposal",
       "name": "Create Pending Response Proposal",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [
-        1260,
-        40
-      ],
+      "position": [1260, 40],
       "retryOnFail": true,
       "maxTries": 3,
       "waitBetweenTries": 2000
@@ -294,27 +182,13 @@
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={\"status\":\"pending_approval\"}",
-        "options": {
-          "timeout": 10000
-        },
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "X-BlueOrch-Automation-Key",
-              "value": "={{$env.BLUEORCH_AUTOMATION_KEY}}"
-            }
-          ]
-        }
+        "options": {"timeout": 10000}
       },
       "id": "pending-approval",
       "name": "Send to Approval Centre",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [
-        1500,
-        40
-      ],
+      "position": [1500, 40],
       "retryOnFail": true,
       "maxTries": 3,
       "waitBetweenTries": 2000
@@ -328,10 +202,7 @@
       "name": "Analyst Review - No Auto Response",
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
-      "position": [
-        1260,
-        200
-      ]
+      "position": [1260, 200]
     },
     {
       "parameters": {
@@ -340,27 +211,13 @@
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={\"status\":\"new\"}",
-        "options": {
-          "timeout": 10000
-        },
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "X-BlueOrch-Automation-Key",
-              "value": "={{$env.BLUEORCH_AUTOMATION_KEY}}"
-            }
-          ]
-        }
+        "options": {"timeout": 10000}
       },
       "id": "release-for-retry",
       "name": "Release Incident for Retry",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [
-        1020,
-        340
-      ],
+      "position": [1020, 340],
       "retryOnFail": true,
       "maxTries": 2,
       "waitBetweenTries": 3000
@@ -374,159 +231,22 @@
       "name": "Human Approval Gate",
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
-      "position": [
-        1740,
-        40
-      ]
+      "position": [1740, 40]
     }
   ],
   "connections": {
-    "Poll Every 15 Seconds": {
-      "main": [
-        [
-          {
-            "node": "Fetch Next New Incident",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Manual Test": {
-      "main": [
-        [
-          {
-            "node": "Fetch Next New Incident",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Fetch Next New Incident": {
-      "main": [
-        [
-          {
-            "node": "Select Next Incident",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Select Next Incident": {
-      "main": [
-        [
-          {
-            "node": "Claim Incident - Triaging",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Claim Incident - Triaging": {
-      "main": [
-        [
-          {
-            "node": "AI Investigation - Enrich IOCs",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "AI Investigation - Enrich IOCs": {
-      "main": [
-        [
-          {
-            "node": "Run Groq AI Triage",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Run Groq AI Triage": {
-      "main": [
-        [
-          {
-            "node": "Build Investigation Result",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Build Investigation Result": {
-      "main": [
-        [
-          {
-            "node": "Triage Result Usable?",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Triage Result Usable?": {
-      "main": [
-        [
-          {
-            "node": "Approval Required?",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Release Incident for Retry",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Approval Required?": {
-      "main": [
-        [
-          {
-            "node": "Create Pending Response Proposal",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Analyst Review - No Auto Response",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Create Pending Response Proposal": {
-      "main": [
-        [
-          {
-            "node": "Send to Approval Centre",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Send to Approval Centre": {
-      "main": [
-        [
-          {
-            "node": "Human Approval Gate",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    }
+    "Poll Every 15 Seconds": {"main": [[{"node": "Fetch Next New Incident", "type": "main", "index": 0}]]},
+    "Manual Test": {"main": [[{"node": "Fetch Next New Incident", "type": "main", "index": 0}]]},
+    "Fetch Next New Incident": {"main": [[{"node": "Select Next Incident", "type": "main", "index": 0}]]},
+    "Select Next Incident": {"main": [[{"node": "Claim Incident - Triaging", "type": "main", "index": 0}]]},
+    "Claim Incident - Triaging": {"main": [[{"node": "AI Investigation - Enrich IOCs", "type": "main", "index": 0}]]},
+    "AI Investigation - Enrich IOCs": {"main": [[{"node": "Run Groq AI Triage", "type": "main", "index": 0}]]},
+    "Run Groq AI Triage": {"main": [[{"node": "Build Investigation Result", "type": "main", "index": 0}]]},
+    "Build Investigation Result": {"main": [[{"node": "Triage Result Usable?", "type": "main", "index": 0}]]},
+    "Triage Result Usable?": {"main": [[{"node": "Approval Required?", "type": "main", "index": 0}], [{"node": "Release Incident for Retry", "type": "main", "index": 0}]]},
+    "Approval Required?": {"main": [[{"node": "Create Pending Response Proposal", "type": "main", "index": 0}], [{"node": "Analyst Review - No Auto Response", "type": "main", "index": 0}]]},
+    "Create Pending Response Proposal": {"main": [[{"node": "Send to Approval Centre", "type": "main", "index": 0}]]},
+    "Send to Approval Centre": {"main": [[{"node": "Human Approval Gate", "type": "main", "index": 0}]]}
   },
   "pinData": {},
   "settings": {

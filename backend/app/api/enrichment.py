@@ -2,14 +2,13 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.core.auth import require_viewer
 from app.database.session import get_db
 from app.schemas.enrichment import EnrichmentResult
 from app.services import ioc_utils
 from app.services.enrichment_service import attach_mitre_techniques, enrich_indicator
 from app.services.incident_service import get_incident
 
-router = APIRouter(tags=["enrichment"], dependencies=[Depends(require_viewer)])
+router = APIRouter(tags=["enrichment"])
 
 
 @router.get("/enrich", response_model=EnrichmentResult)

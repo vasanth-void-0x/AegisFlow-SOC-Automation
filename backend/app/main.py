@@ -9,7 +9,6 @@ from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.api.approvals import router as approvals_router
-from app.api.auth import router as auth_router
 from app.api.audit import router as audit_router
 from app.api.enrichment import router as enrichment_router
 from app.api.direct_logs import router as direct_logs_router
@@ -32,15 +31,9 @@ logger = get_logger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Dev convenience: auto-create tables when using SQLite so `uvicorn app.main:app`
-    # works out of the box. Alembic migrations are the source of truth otherwise.
-    if settings.database_url.startswith("sqlite"):
-        try:
-            Base.metadata.create_all(bind=engine)
-        except Exception:
-            # Auth/config and health endpoints must remain available even when
-            # an ephemeral database initialization fails in a serverless cold start.
-            logger.exception("Database initialization failed during startup")
+    # Bootstrap the schema for both local SQLite and managed PostgreSQL.
+    # SQLAlchemy emits idempotent CREATE TABLE statements for missing tables.
+    Base.metadata.create_all(bind=engine)
     logger.info("BlueOrch started | demo_mode=%s | env=%s", settings.demo_mode, settings.environment)
     yield
 
@@ -91,7 +84,6 @@ def create_app() -> FastAPI:
         )
 
     app.include_router(health_router)
-    app.include_router(auth_router, prefix="/api/v1")
     app.include_router(incidents_router, prefix="/api/v1")
     app.include_router(enrichment_router, prefix="/api/v1")
     app.include_router(triage_router, prefix="/api/v1")

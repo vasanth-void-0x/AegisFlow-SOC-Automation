@@ -218,7 +218,3 @@ export interface LogAgentRegistration {
   ingest_path: string
   heartbeat_path: string
 }
-
-export type AuthRole = 'viewer' | 'analyst' | 'admin'
-export interface AuthUser { username: string; role: AuthRole; kind: 'user' | 'service' }
-export interface AuthConfig { enabled: boolean }

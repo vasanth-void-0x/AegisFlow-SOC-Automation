@@ -18,8 +18,6 @@ import type {
   SiemTestResult,
   LogAgentStatus,
   LogAgentRegistration,
-  AuthConfig,
-  AuthUser,
 } from './types'
 
 const BASE = '/api/v1'
@@ -35,9 +33,8 @@ class ApiError extends Error {
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const url = path.startsWith('/api/v1') || path === '/health' ? path : `${BASE}${path}`
   const res = await fetch(url, {
-    credentials: 'same-origin',
-    headers: { 'Content-Type': 'application/json', ...(init?.headers ?? {}) },
     ...init,
+    headers: { 'Content-Type': 'application/json', ...(init?.headers ?? {}) },
   })
   if (!res.ok) {
     let detail = res.statusText
@@ -54,10 +51,6 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export const api = {
-  authConfig: () => request<AuthConfig>('/auth/config'),
-  login: (username: string, password: string) => request<AuthUser>('/auth/login', { method: 'POST', body: JSON.stringify({ username, password }) }),
-  me: () => request<AuthUser>('/auth/me'),
-  logout: () => request<void>('/auth/logout', { method: 'POST' }),
   health: () => request<HealthStatus>('/api/v1/health'),
 
   listIncidents: (params: {
