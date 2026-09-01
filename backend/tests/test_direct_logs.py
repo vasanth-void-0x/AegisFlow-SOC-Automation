@@ -87,8 +87,18 @@ def test_agent_registration_heartbeat_and_authenticated_batch(client):
         assert batch.json()["accepted"] == 1
         assert batch.json()["incidents"][0]["source"] == "direct:agent:BLUEORCH-WIN-01"
 
+        noise_batch = client.post(
+            "/api/v1/agents/logs/bulk",
+            headers={"X-BlueOrch-Agent-Key": api_key},
+            json={"logs": [{"message": "Windows informational event", "event_id": "win-info-1"}]},
+        )
+        assert noise_batch.status_code == 200
+        assert noise_batch.json()["accepted"] == 0
+        assert noise_batch.json()["filtered"] == 1
+        assert noise_batch.json()["incidents"] == []
+
         agents = client.get("/api/v1/agents", headers={"X-BlueOrch-Registration-Token": "registration-secret"})
         assert agents.status_code == 200
-        assert agents.json()[0]["events_received"] == 1
+        assert agents.json()[0]["events_received"] == 2
     finally:
         settings.direct_log_registration_token = original
