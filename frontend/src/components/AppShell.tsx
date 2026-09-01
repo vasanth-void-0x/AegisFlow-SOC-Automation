@@ -61,7 +61,7 @@ export function AppShell() {
     <div className="mobile-bar"><button onClick={()=>setMobileNavOpen(true)} aria-label="Open navigation"><Icon name="grid"/></button><span>BLUEORCH</span></div>
     {mobileNavOpen&&<div className="drawer-overlay" onClick={()=>setMobileNavOpen(false)}/>}
     <aside className={`sidebar ${mobileNavOpen?'open':''}`}>
-      <div className="brand-lockup"><div className="brand-mark crystal-v"><img src="/blueorch-v-core.png" alt="BlueOrch crystal V"/></div><div><div className="brand-name"><span>BLUE</span>ORCH</div><div className="brand-caption">SOC AUTOMATION</div></div></div>
+      <div className="brand-lockup"><div className="brand-mark crystal-v"><img src="/v-wings-sticker.png" alt="BlueOrch winged V"/></div><div><div className="brand-name"><span>BLUE</span>ORCH</div><div className="brand-caption">SOC AUTOMATION</div></div></div>
       <div className="nav-label">OPERATIONS</div>
       <nav className="sidebar-nav">{NAV_ITEMS.map(item=><NavLink key={item.to} to={item.to} end={item.end} onClick={()=>setMobileNavOpen(false)} className={({isActive})=>`nav-item ${isActive?'active':''}`}><Icon name={item.icon}/><span>{item.label}</span><span className="nav-chevron">›</span></NavLink>)}</nav>
       <div className="v-sticker" aria-label="V Security Automation">
