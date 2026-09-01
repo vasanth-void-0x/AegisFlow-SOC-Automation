@@ -9,8 +9,7 @@ import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
 
-VERSION = "1.0.0"
-SEVERITY_RANK = {"low": 0, "medium": 1, "high": 2, "critical": 3}
+VERSION = "1.1.0"
 
 
 def request(config: dict, path: str, payload: dict) -> dict:
@@ -20,15 +19,6 @@ def request(config: dict, path: str, payload: dict) -> dict:
     )
     with urllib.request.urlopen(req, timeout=20) as response:
         return json.loads(response.read())
-
-
-def send_automation(config: dict, payload: dict) -> None:
-    req = urllib.request.Request(
-        config["n8n_webhook_url"], data=json.dumps(payload).encode("utf-8"),
-        headers={"Content-Type": "application/json"}, method="POST",
-    )
-    with urllib.request.urlopen(req, timeout=30) as response:
-        response.read()
 
 
 def heartbeat(config: dict) -> None:
@@ -44,7 +34,7 @@ def channels(profile: str) -> list[str]:
 def query_windows(channel: str, after: int, limit: int = 100) -> list[dict]:
     script = (
         "$ErrorActionPreference='Stop';"
-        f"Get-WinEvent -FilterHashtable @{{LogName='{channel}';StartTime=(Get-Date).AddMinutes(-10)}} -MaxEvents {limit} | "
+        f"Get-WinEvent -FilterHashtable @{{LogName='{channel}';StartTime=(Get-Date).AddMinutes(-10)}} -MaxEvents {limit} -ErrorAction SilentlyContinue | "
         f"Where-Object {{$_.RecordId -gt {after}}} | Sort-Object RecordId | "
         "Select-Object RecordId,Id,LevelDisplayName,ProviderName,TimeCreated,MachineName,Message | ConvertTo-Json -Compress"
     )
@@ -70,21 +60,6 @@ def normalize(item: dict, channel: str, source_name: str) -> dict:
         "event_id": f"{socket.gethostname()}:{channel}:{item['RecordId']}",
         "fields": {"event_id": item.get("Id"), "record_id": item.get("RecordId"), "channel": channel,
                    "provider": item.get("ProviderName"), "event_name": f"Windows {channel} Event {item.get('Id')}"},
-    }
-
-
-def to_automation_alert(event: dict) -> dict:
-    fields = event.get("fields") or {}
-    return {
-        "source": f"direct:agent:{event['source_name']}",
-        "alert_name": fields.get("event_name") or "Windows security event",
-        "severity": event.get("severity", "low"),
-        "description": event["message"],
-        "hostname": event.get("hostname"),
-        "event_time": event.get("timestamp"),
-        "raw_event": {"message": event["message"], **fields},
-        "indicators": [],
-        "idempotency_key": event.get("event_id"),
     }
 
 
@@ -115,16 +90,12 @@ def run(config: dict, once: bool = False) -> None:
             save_json(state_path, state)
             while spool:
                 batch = spool[:100]
-                automation_url = str(config.get("n8n_webhook_url") or "").strip()
-                minimum = str(config.get("automation_min_severity") or "medium").lower()
-                automated = [item for item in batch if automation_url and SEVERITY_RANK.get(item.get("severity", "low"), 0) >= SEVERITY_RANK.get(minimum, 1)]
-                direct = [item for item in batch if item not in automated]
-                for item in automated:
-                    send_automation(config, to_automation_alert(item))
-                result = request(config, "/api/v1/agents/logs/bulk", {"logs": direct}) if direct else {"accepted": 0, "duplicates": 0}
+                # BlueOrch owns ingestion and persistence. n8n V2 polls durable
+                # incidents from the backend instead of receiving raw endpoint logs.
+                result = request(config, "/api/v1/agents/logs/bulk", {"logs": batch})
                 spool = spool[len(batch):]
                 save_json(spool_path, spool)
-                print(f"sent={result['accepted']} automated={len(automated)} duplicates={result['duplicates']} queued={len(spool)}", flush=True)
+                print(f"sent={result['accepted']} duplicates={result['duplicates']} queued={len(spool)}", flush=True)
         except Exception as exc:
             save_json(spool_path, spool)
             print(f"collector retry: {exc}", flush=True)
