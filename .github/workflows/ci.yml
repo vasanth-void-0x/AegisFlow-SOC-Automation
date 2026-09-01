@@ -161,13 +161,13 @@ jobs:
       - name: Scan backend image
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: "aegisflow-backend:ci"
+          image-ref: "blueorch-backend:ci"
           severity: "CRITICAL,HIGH"
           exit-code: "0"
 
       - name: Scan frontend image
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: "aegisflow-frontend:ci"
+          image-ref: "blueorch-frontend:ci"
           severity: "CRITICAL,HIGH"
           exit-code: "0"
