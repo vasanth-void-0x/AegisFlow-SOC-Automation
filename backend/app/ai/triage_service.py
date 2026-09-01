@@ -63,6 +63,8 @@ def run_triage(
     incident: Incident,
     enrichment_context: list[dict] | None = None,
     runbook_excerpt: str | None = None,
+    related_incidents: list[dict] | None = None,
+    mitre_context: list[dict] | None = None,
 ) -> TriageRecord:
     settings = get_settings()
 
@@ -85,7 +87,13 @@ def run_triage(
     )
 
     try:
-        user_prompt = build_user_prompt(alert_context, enrichment_context or [], runbook_excerpt)
+        user_prompt = build_user_prompt(
+            alert_context,
+            enrichment_context or [],
+            runbook_excerpt,
+            related_incidents=related_incidents,
+            mitre_context=mitre_context,
+        )
         response = call_groq_triage(user_prompt)
 
         record.raw_response = response["text"]

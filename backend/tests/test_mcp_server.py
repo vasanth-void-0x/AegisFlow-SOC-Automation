@@ -169,7 +169,8 @@ async def test_check_ip_reputation_tool(db_session):
 
     result = await tool_impl.check_ip_reputation(CheckIpReputationInput(ip="8.8.8.8"))
     assert result["indicator_type"] == "ip"
-    assert result["source"] == "demo"
+    assert result["source"] == "unavailable"
+    assert result["provider_status"] == "not_configured"
 
 
 @pytest.mark.asyncio
@@ -195,3 +196,19 @@ def test_allowlist_contains_exactly_seven_tools():
         "get_soc_runbook",
         "create_response_proposal",
     }
+
+
+@pytest.mark.asyncio
+async def test_shared_executor_writes_mcp_audit_record(db_session):
+    from sqlalchemy import select
+
+    from app.mcp_server.executor import execute_tool
+    from app.models.mcp_audit import McpToolCallLog
+
+    result = await execute_tool("map_mitre_technique", {"alert_text": "SSH brute force"})
+    assert any(item["technique_id"] == "T1110" for item in result["techniques"])
+
+    row = db_session.execute(select(McpToolCallLog)).scalar_one()
+    assert row.tool_name == "map_mitre_technique"
+    assert row.success is True
+    assert row.duration_ms is not None

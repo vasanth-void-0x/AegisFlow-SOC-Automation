@@ -1,7 +1,35 @@
 # MCP Server Setup Guide
 
 BlueOrch's MCP security server exposes 7 typed tools that let any MCP client (Claude Desktop, Claude
-Code, a custom agent, etc.) interact with the SOC platform directly.
+Code, a custom agent, etc.) interact with the SOC platform directly. The same
+allowlisted executor is also available through an authenticated HTTPS gateway
+for remote n8n workflows.
+
+## Remote gateway for n8n
+
+Set a different long random value in both environments:
+
+```text
+# Vercel/backend
+MCP_GATEWAY_API_KEY=<long-random-secret>
+
+# machine/process that runs n8n
+BLUEORCH_MCP_KEY=<the-same-long-random-secret>
+```
+
+The V3 workflow sends it only in `X-BlueOrch-MCP-Key`. Do not place the literal
+secret in exported workflow JSON. A remote call uses:
+
+```http
+POST /api/v1/mcp/tools/check_ip_reputation
+X-BlueOrch-MCP-Key: <secret>
+Content-Type: application/json
+
+{"arguments":{"ip":"8.8.8.8"}}
+```
+
+Both stdio and HTTPS calls pass through the same allowlist, timeout, redaction,
+and production database audit path.
 
 ## Why a separate environment?
 
@@ -54,7 +82,7 @@ Restart Claude Desktop, and the 7 tools become available in any conversation.
 
 | Tool | Purpose |
 |---|---|
-| `check_ip_reputation` | IOC enrichment for an IP (VirusTotal + GeoIP, demo fallback) |
+| `check_ip_reputation` | IOC enrichment for an IP; VT failures are explicit and never fake live verdicts |
 | `check_file_hash` | IOC enrichment for a file hash |
 | `search_incidents` | Filter/paginate incidents by severity/status |
 | `get_incident` | Full details for one incident |

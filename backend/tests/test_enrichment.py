@@ -41,38 +41,39 @@ def test_normalize_indicator_type_mismatch_raises():
         ioc_utils.normalize_indicator_type("ip", "not-an-ip")
 
 
-# ---- Enrichment (demo mode - no VT key set in test env) ----
+# ---- Enrichment (no VT key set in test env) ----
 
 @pytest.mark.asyncio
 async def test_enrich_private_ip_never_calls_external_provider():
     result = await enrich_indicator("ip", "192.168.1.5")
     assert result.is_public is False
     assert result.provider == "internal"
-    assert result.source == "demo"
+    assert result.source == "unavailable"
+    assert result.provider_status == "not_applicable"
 
 
 @pytest.mark.asyncio
-async def test_enrich_public_ip_falls_back_to_demo_without_key():
+async def test_enrich_public_ip_reports_missing_key():
     result = await enrich_indicator("ip", "1.1.1.1")
-    assert result.source == "demo"
-    assert result.virustotal is not None
-    assert result.geo is not None
+    assert result.source == "unavailable"
+    assert result.provider_status == "not_configured"
+    assert result.virustotal is None
 
 
 @pytest.mark.asyncio
-async def test_enrich_is_deterministic_for_same_value():
+async def test_missing_provider_result_is_not_cached_as_a_verdict():
     r1 = await enrich_indicator("ip", "185.220.101.5")
     r2 = await enrich_indicator("ip", "185.220.101.5")
-    # second call should be served from cache
-    assert r2.source in ("cached", "demo")
-    assert r1.virustotal.malicious == r2.virustotal.malicious
+    assert r1.source == "unavailable"
+    assert r2.source == "unavailable"
+    assert r1.virustotal is None and r2.virustotal is None
 
 
 @pytest.mark.asyncio
-async def test_enrich_hash_demo_mode():
+async def test_enrich_hash_reports_missing_key():
     result = await enrich_indicator("hash", "a" * 64)
     assert result.indicator_type == "hash"
-    assert result.source == "demo"
+    assert result.provider_status == "not_configured"
 
 
 @pytest.mark.asyncio

@@ -3,7 +3,9 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.ai.investigation_service import run_deep_investigation
 from app.ai.triage_service import run_triage
+from app.api.mcp_gateway import require_mcp_key
 from app.database.session import get_db
 from app.models.triage import TriageRecord
 from app.rag.retriever import format_citation, retrieve_runbook
@@ -11,6 +13,23 @@ from app.schemas.triage import TriageRecordOut
 from app.services.incident_service import get_incident
 
 router = APIRouter(tags=["triage"])
+
+
+@router.post(
+    "/incidents/{incident_id}/investigate",
+    response_model=TriageRecordOut,
+    responses={404: {"description": "Incident not found"}},
+    dependencies=[Depends(require_mcp_key)],
+)
+async def trigger_deep_investigation(
+    incident_id: str, db: Session = Depends(get_db)
+) -> TriageRecordOut:
+    """Run the V3 evidence pipeline through audited MCP tools and Groq."""
+    incident = get_incident(db, incident_id)
+    if incident is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Incident {incident_id} not found")
+    record = await run_deep_investigation(db, incident)
+    return TriageRecordOut.model_validate(record)
 
 
 @router.post(

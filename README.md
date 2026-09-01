@@ -3,7 +3,7 @@
 [![Live](https://img.shields.io/badge/LIVE-SOC%20DASHBOARD-28d7f2?style=for-the-badge&logo=vercel&logoColor=white)](https://aegisflow-soc-automation.vercel.app/)
 [![React](https://img.shields.io/badge/React-TypeScript-087ea4?style=flat-square&logo=react)](frontend/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-Backend-009688?style=flat-square&logo=fastapi)](backend/)
-[![Tests](https://img.shields.io/badge/Backend%20Tests-119%20Passing-3ecf8e?style=flat-square)](#testing)
+[![Tests](https://img.shields.io/badge/Backend%20Tests-127%20Passing-3ecf8e?style=flat-square)](#testing)
 
 ### [Launch the live SOC dashboard →](https://aegisflow-soc-automation.vercel.app/)
 
@@ -43,7 +43,7 @@ evidence-linked SOC automation workflows.
 | 14 | Windows 24×7 Event Log collector, heartbeat & disk retry | ✅ |
 | 15 | Final incident report API | ✅ |
 
-**119 backend tests passing** in the verified combined FastAPI/MCP test suite.
+**127 backend tests passing** in the verified combined FastAPI/MCP test suite.
 
 ## Architecture
 
@@ -102,7 +102,7 @@ BlueOrch-SOC-Automation/
 │   │   ├── ai/                 Groq client + triage orchestration
 │   │   ├── rag/                 Chunking, embeddings, vector store, retriever
 │   │   └── mcp_server/           MCP tools, schemas, audit, redaction
-│   ├── tests/                    119 tests
+│   ├── tests/                    127 tests
 │   ├── requirements.txt           Main backend deps
 │   └── requirements-mcp.txt        Isolated MCP server deps (see below)
 ├── frontend/                React + TypeScript + Vite SOC dashboard
@@ -167,7 +167,8 @@ See [docs/MCP_SETUP.md](docs/MCP_SETUP.md) for connecting an MCP client.
 docker run -it --rm -p 5678:5678 n8nio/n8n
 ```
 
-Then import `n8n/blueorch-error-handler.json` first and `n8n/blueorch-workflow.json` second.
+For the MCP deep-investigation flow, set `BLUEORCH_MCP_KEY` in the n8n process
+environment and import `n8n/blueorch-incident-automation-v3.json`.
 Set `BLUEORCH_API_BASE=http://host.docker.internal:8000` when n8n runs in Docker, or
 `http://backend:8000` with Docker Compose. See [n8n/README.md](n8n/README.md).
 
@@ -203,12 +204,14 @@ Use `Get-ScheduledTask -TaskName "BlueOrch Log Agent"` to verify it.
 ## Environment variables
 
 See [.env.example](.env.example) for the full reference. Everything defaults to safe demo values —
-**zero API keys are required to run the system.**
+Core local operation works without provider keys; live enrichment, remote MCP,
+and deep AI require their corresponding secrets.
 
 | Variable | Purpose | Required? |
 |---|---|---|
 | `GROQ_API_KEY` | Live AI triage | No — falls back to rule-based triage |
-| `VIRUSTOTAL_API_KEY` | Live IOC reputation | No — falls back to demo enrichment |
+| `VIRUSTOTAL_API_KEY` | Live IOC reputation | Deep live investigation |
+| `MCP_GATEWAY_API_KEY` | Authenticates remote n8n MCP tool calls | n8n V3 |
 | `ENABLE_REAL_RESPONSE_ADAPTER` | Enable real (non-simulated) response actions | No — **must stay `false` unless you've implemented and reviewed a real adapter** |
 | `DATABASE_URL` | Persistent Postgres URL (required for deployed 24×7 telemetry) | Production direct logs |
 | `DIRECT_LOG_API_KEY` | Protects agent/webhook/bulk log-ingestion endpoints | Recommended for remote collectors |
@@ -220,7 +223,7 @@ See [.env.example](.env.example) for the full reference. Everything defaults to 
 
 ```bash
 cd backend
-python -m pytest -q   # 119 tests
+python -m pytest -q   # 127 tests
 ```
 
 Frontend:

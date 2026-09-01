@@ -26,4 +26,9 @@ def health_check() -> dict:
         "environment": settings.environment,
         "demo_mode": settings.demo_mode,
         "database": db_status,
+        "providers": {
+            "virustotal": "configured" if settings.virustotal_api_key else "not_configured",
+            "groq": "configured" if settings.groq_api_key else "not_configured",
+            "remote_mcp": "configured" if settings.mcp_gateway_api_key else "not_configured",
+        },
     }

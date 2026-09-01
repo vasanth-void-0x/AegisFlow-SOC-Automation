@@ -1,21 +1,32 @@
 # BlueOrch n8n Orchestration
 
-## Recommended: incident-driven V2
+## Recommended: MCP deep-investigation V3
 
-Import **`blueorch-incident-automation-v2.json`** for the current BlueOrch
+Import **`blueorch-incident-automation-v3.json`** for the current BlueOrch
 architecture. It does not accept raw endpoint logs. Agent, JSON webhook,
 syslog, file, and SIEM inputs first create durable incidents in BlueOrch; the
 workflow then polls the production API every 15 seconds and processes one new
 incident at a time.
 
-The V2 flow is:
+Before starting n8n, set `BLUEORCH_MCP_KEY` to the same secret configured as
+`MCP_GATEWAY_API_KEY` in the backend. On Windows PowerShell:
+
+```powershell
+$env:BLUEORCH_MCP_KEY = "YOUR_MCP_GATEWAY_KEY"
+n8n start
+```
+
+The V3 flow is:
 
 1. Fetch the next incident with status `new`.
 2. Claim it by changing its status to `triaging`.
-3. Enrich its indicators and run Groq AI triage.
-4. For a high/critical true positive with a valid response target, create a
+3. Invoke the authenticated remote MCP investigation gateway.
+4. Audit incident lookup, VirusTotal IOC reputation, MITRE mapping, SOC
+   runbook retrieval, and historical correlation as separate MCP tool calls.
+5. Run evidence-grounded Groq deep investigation and suggest a response.
+6. For a high/critical true positive with a valid response target, create a
    pending response proposal and move the incident to `pending_approval`.
-5. Stop at the human approval gate. Approval or rejection happens only in the
+7. Stop at the human approval gate. Approval or rejection happens only in the
    BlueOrch Approval Centre. Approval immediately invokes the backend's safe
    response adapter and records the execution in the audit timeline.
 
@@ -26,6 +37,8 @@ when n8n returns.
 
 Import the workflow, publish it, and keep n8n running. `Manual Test` can be
 used to process one waiting incident immediately.
+
+V2 remains available as `blueorch-incident-automation-v2.json` for rollback.
 
 ## Legacy webhook workflow
 

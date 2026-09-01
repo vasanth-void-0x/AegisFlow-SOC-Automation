@@ -12,6 +12,37 @@ class Classification(str, enum.Enum):
     needs_more_info = "needs_more_info"
 
 
+class IocVerdict(BaseModel):
+    indicator: str
+    verdict: str
+    source: str
+    malicious: int | None = None
+    suspicious: int | None = None
+
+
+class ResponseRecommendation(BaseModel):
+    action_type: str | None = None
+    target: str | None = None
+    priority: str = "analyst_review"
+    reason: str
+
+    @field_validator("action_type")
+    @classmethod
+    def validate_action_type(cls, value: str | None) -> str | None:
+        allowed = {"block_ip", "isolate_host", "disable_account"}
+        if value is not None and value not in allowed:
+            raise ValueError(f"action_type must be one of {allowed} or null")
+        return value
+
+    @field_validator("priority")
+    @classmethod
+    def validate_priority(cls, value: str) -> str:
+        allowed = {"immediate", "high", "analyst_review"}
+        if value not in allowed:
+            raise ValueError(f"priority must be one of {allowed}")
+        return value
+
+
 class TriageResult(BaseModel):
     """The strict schema every LLM triage response must conform to."""
 
@@ -23,6 +54,11 @@ class TriageResult(BaseModel):
     mitre_techniques: list[str] = Field(default_factory=list)
     recommended_actions: list[str] = Field(default_factory=list)
     requires_human_approval: bool = True
+    attack_story: str | None = Field(default=None, max_length=4000)
+    risk_reasoning: list[str] = Field(default_factory=list)
+    missing_evidence: list[str] = Field(default_factory=list)
+    ioc_verdicts: list[IocVerdict] = Field(default_factory=list)
+    recommended_response: ResponseRecommendation | None = None
 
     @field_validator("recommended_severity")
     @classmethod

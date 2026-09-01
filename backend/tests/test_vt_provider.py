@@ -7,19 +7,21 @@ from app.services import enrichment_service
 
 
 @pytest.mark.asyncio
-async def test_provider_timeout_falls_back_to_demo(monkeypatch):
+async def test_provider_timeout_is_explicitly_unavailable(monkeypatch):
     async def fake_lookup_ip(ip):
-        raise vt.VirusTotalError("VirusTotal request timed out")
+        raise vt.VirusTotalTimeoutError("VirusTotal request timed out")
 
     monkeypatch.setattr(enrichment_service, "get_settings", lambda: _fake_settings_with_key())
     monkeypatch.setattr(vt, "lookup_ip", fake_lookup_ip)
 
     result = await enrichment_service.enrich_ip("8.8.4.4")
-    assert result.source == "demo"
+    assert result.source == "unavailable"
+    assert result.provider_status == "timeout"
+    assert result.virustotal is None
 
 
 @pytest.mark.asyncio
-async def test_provider_rate_limit_falls_back_to_demo(monkeypatch):
+async def test_provider_rate_limit_is_explicit(monkeypatch):
     async def fake_lookup_ip(ip):
         raise vt.VirusTotalRateLimitError("rate limited", status_code=429)
 
@@ -27,7 +29,8 @@ async def test_provider_rate_limit_falls_back_to_demo(monkeypatch):
     monkeypatch.setattr(vt, "lookup_ip", fake_lookup_ip)
 
     result = await enrichment_service.enrich_ip("9.9.9.9")
-    assert result.source == "demo"
+    assert result.source == "unavailable"
+    assert result.provider_status == "rate_limited"
 
 
 @pytest.mark.asyncio
@@ -58,7 +61,8 @@ def test_enrich_api_endpoint(client):
     resp = client.get("/api/v1/enrich", params={"indicator_type": "ip", "value": "8.8.8.8"})
     assert resp.status_code == 200
     body = resp.json()
-    assert body["source"] == "demo"
+    assert body["source"] == "unavailable"
+    assert body["provider_status"] == "not_configured"
 
 
 def test_enrich_api_endpoint_invalid_value(client):

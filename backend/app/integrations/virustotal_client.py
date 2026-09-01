@@ -1,10 +1,12 @@
 """
 VirusTotal Public API v3 client.
 
-Treated as a strictly non-commercial, portfolio-scale integration:
-- Public API has a 4 req/min quota - callers must respect enrichment cache.
-- All calls are best-effort: on error/timeout/quota, caller falls back to demo data.
+Treated as a strictly non-commercial, portfolio-scale integration. Provider
+failures are classified so callers never mistake synthetic data for a live
+VirusTotal verdict.
 """
+import asyncio
+
 import httpx
 
 from app.core.config import get_settings
@@ -25,6 +27,18 @@ class VirusTotalRateLimitError(VirusTotalError):
     pass
 
 
+class VirusTotalAuthError(VirusTotalError):
+    pass
+
+
+class VirusTotalNotFoundError(VirusTotalError):
+    pass
+
+
+class VirusTotalTimeoutError(VirusTotalError):
+    pass
+
+
 async def _get(path: str) -> dict:
     settings = get_settings()
     if not settings.virustotal_api_key:
@@ -32,17 +46,27 @@ async def _get(path: str) -> dict:
 
     headers = {"x-apikey": settings.virustotal_api_key}
     async with httpx.AsyncClient(timeout=settings.enrichment_timeout_seconds) as client:
-        try:
-            resp = await client.get(f"{BASE_URL}{path}", headers=headers)
-        except httpx.TimeoutException as exc:
-            raise VirusTotalError("VirusTotal request timed out") from exc
-        except httpx.RequestError as exc:
-            raise VirusTotalError(f"VirusTotal request failed: {exc}") from exc
+        for attempt in range(2):
+            try:
+                resp = await client.get(f"{BASE_URL}{path}", headers=headers)
+                break
+            except httpx.TimeoutException as exc:
+                if attempt == 0:
+                    await asyncio.sleep(0.2)
+                    continue
+                raise VirusTotalTimeoutError("VirusTotal request timed out after retry") from exc
+            except httpx.RequestError as exc:
+                if attempt == 0:
+                    await asyncio.sleep(0.2)
+                    continue
+                raise VirusTotalError("VirusTotal network request failed after retry") from exc
 
     if resp.status_code == 429:
         raise VirusTotalRateLimitError("VirusTotal rate limit exceeded", status_code=429)
+    if resp.status_code in (401, 403):
+        raise VirusTotalAuthError("VirusTotal API key was rejected", status_code=resp.status_code)
     if resp.status_code == 404:
-        raise VirusTotalError("Indicator not found in VirusTotal", status_code=404)
+        raise VirusTotalNotFoundError("Indicator not found in VirusTotal", status_code=404)
     if resp.status_code != 200:
         raise VirusTotalError(f"VirusTotal returned HTTP {resp.status_code}", status_code=resp.status_code)
 

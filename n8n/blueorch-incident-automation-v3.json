@@ -1,0 +1,209 @@
+{
+  "name": "BlueOrch - MCP Deep Investigation V3",
+  "nodes": [
+    {
+      "parameters": {"rule": {"interval": [{"field": "seconds", "secondsInterval": 15}]}},
+      "id": "schedule-trigger",
+      "name": "Poll Every 15 Seconds",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [-900, 120]
+    },
+    {
+      "parameters": {},
+      "id": "manual-trigger",
+      "name": "Manual Test",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [-900, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://blueorch-soc-automation.vercel.app/api/v1/incidents",
+        "sendQuery": true,
+        "queryParameters": {"parameters": [
+          {"name": "status", "value": "new"},
+          {"name": "minimum_severity", "value": "medium"},
+          {"name": "page", "value": "1"},
+          {"name": "page_size", "value": "1"}
+        ]},
+        "options": {"timeout": 10000}
+      },
+      "id": "fetch-new-incidents",
+      "name": "Fetch Next New Incident",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [-660, 210],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {"jsCode": "const page = $input.first().json;\nconst incident = Array.isArray(page.items) ? page.items[0] : null;\nif (!incident) return [];\nreturn [{ json: incident }];"},
+      "id": "select-next-incident",
+      "name": "Select Next Incident",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-420, 210]
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://blueorch-soc-automation.vercel.app/api/v1/incidents/{{$('Select Next Incident').item.json.id}}/status",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"status\":\"triaging\"}",
+        "options": {"timeout": 10000}
+      },
+      "id": "claim-incident",
+      "name": "Claim Incident - Triaging",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [-180, 210],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://blueorch-soc-automation.vercel.app/api/v1/incidents/{{$('Select Next Incident').item.json.id}}/investigate",
+        "sendHeaders": true,
+        "headerParameters": {"parameters": [
+          {"name": "X-BlueOrch-MCP-Key", "value": "={{$env.BLUEORCH_MCP_KEY}}"}
+        ]},
+        "options": {"timeout": 60000}
+      },
+      "id": "deep-investigation",
+      "name": "MCP Deep AI Investigation",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [60, 210],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 5000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $input.first().json;\nconst incident = $('Select Next Incident').first().json;\nconst result = response.result;\nif (!result) return [{ json: { usable: false, incident_id: incident.id, error: response.message || response.error || 'Deep investigation returned no result' } }];\nconst severity = String(result.recommended_severity || incident.severity || 'low').toLowerCase();\nconst classification = String(result.classification || 'needs_more_info').toLowerCase();\nconst recommendation = result.recommended_response || {};\nlet action_type = recommendation.action_type || null;\nlet target = recommendation.target || null;\nif (!action_type || !target) {\n  if (incident.source_ip) { action_type = 'block_ip'; target = incident.source_ip; }\n  else if (incident.hostname) { action_type = 'isolate_host'; target = incident.hostname; }\n  else if (incident.username) { action_type = 'disable_account'; target = incident.username; }\n}\nconst needs_approval = Boolean(result.requires_human_approval) && classification === 'true_positive' && ['high','critical'].includes(severity) && Boolean(action_type) && Boolean(target);\nreturn [{ json: { usable: true, incident_id: incident.id, severity, classification, confidence: result.confidence, summary: result.summary, attack_story: result.attack_story, evidence: result.evidence || [], risk_reasoning: result.risk_reasoning || [], missing_evidence: result.missing_evidence || [], ioc_verdicts: result.ioc_verdicts || [], recommended_actions: result.recommended_actions || [], needs_approval, action_type, target, justification: `${recommendation.reason || result.summary} Confidence: ${Math.round(Number(result.confidence || 0) * 100)}%. Human approval is required before execution.` } }];"
+      },
+      "id": "build-result",
+      "name": "Build Evidence-Based Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [300, 210]
+    },
+    {
+      "parameters": {"conditions": {"options": {"caseSensitive": true, "typeValidation": "strict"}, "conditions": [
+        {"leftValue": "={{$json.usable}}", "rightValue": true, "operator": {"type": "boolean", "operation": "equals"}}
+      ], "combinator": "and"}},
+      "id": "result-usable",
+      "name": "Investigation Usable?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [540, 210]
+    },
+    {
+      "parameters": {"conditions": {"options": {"caseSensitive": true, "typeValidation": "strict"}, "conditions": [
+        {"leftValue": "={{$json.needs_approval}}", "rightValue": true, "operator": {"type": "boolean", "operation": "equals"}}
+      ], "combinator": "and"}},
+      "id": "approval-required",
+      "name": "High Risk Approval Required?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [780, 120]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://blueorch-soc-automation.vercel.app/api/v1/mcp/tools/create_response_proposal",
+        "sendHeaders": true,
+        "headerParameters": {"parameters": [
+          {"name": "X-BlueOrch-MCP-Key", "value": "={{$env.BLUEORCH_MCP_KEY}}"}
+        ]},
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({arguments: {incident_id: $json.incident_id, action_type: $json.action_type, target: $json.target, justification: $json.justification, proposed_by: 'n8n_mcp_v3'}}) }}",
+        "options": {"timeout": 15000}
+      },
+      "id": "mcp-create-proposal",
+      "name": "MCP Create Response Proposal",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1020, 40],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://blueorch-soc-automation.vercel.app/api/v1/incidents/{{$('Build Evidence-Based Response').item.json.incident_id}}/status",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"status\":\"pending_approval\"}",
+        "options": {"timeout": 10000}
+      },
+      "id": "pending-approval",
+      "name": "Send to Human Approval Centre",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1260, 40],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {"resource": "noOp", "notes": "Low/medium or uncertain investigations remain assigned for analyst review. No disruptive response is executed."},
+      "id": "analyst-review",
+      "name": "Analyst Review - No Auto Response",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [1020, 220]
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://blueorch-soc-automation.vercel.app/api/v1/incidents/{{$json.incident_id}}/status",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"status\":\"new\"}",
+        "options": {"timeout": 10000}
+      },
+      "id": "release-for-retry",
+      "name": "Release Incident for Retry",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [780, 360],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 3000
+    },
+    {
+      "parameters": {"resource": "noOp", "notes": "Only a human can approve or reject. The approved backend response adapter remains simulated unless a separately reviewed real EDR connector is enabled."},
+      "id": "human-gate",
+      "name": "Human Approval Gate",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [1500, 40]
+    }
+  ],
+  "connections": {
+    "Poll Every 15 Seconds": {"main": [[{"node": "Fetch Next New Incident", "type": "main", "index": 0}]]},
+    "Manual Test": {"main": [[{"node": "Fetch Next New Incident", "type": "main", "index": 0}]]},
+    "Fetch Next New Incident": {"main": [[{"node": "Select Next Incident", "type": "main", "index": 0}]]},
+    "Select Next Incident": {"main": [[{"node": "Claim Incident - Triaging", "type": "main", "index": 0}]]},
+    "Claim Incident - Triaging": {"main": [[{"node": "MCP Deep AI Investigation", "type": "main", "index": 0}]]},
+    "MCP Deep AI Investigation": {"main": [[{"node": "Build Evidence-Based Response", "type": "main", "index": 0}], [{"node": "Build Evidence-Based Response", "type": "main", "index": 0}]]},
+    "Build Evidence-Based Response": {"main": [[{"node": "Investigation Usable?", "type": "main", "index": 0}]]},
+    "Investigation Usable?": {"main": [[{"node": "High Risk Approval Required?", "type": "main", "index": 0}], [{"node": "Release Incident for Retry", "type": "main", "index": 0}]]},
+    "High Risk Approval Required?": {"main": [[{"node": "MCP Create Response Proposal", "type": "main", "index": 0}], [{"node": "Analyst Review - No Auto Response", "type": "main", "index": 0}]]},
+    "MCP Create Response Proposal": {"main": [[{"node": "Send to Human Approval Centre", "type": "main", "index": 0}]]},
+    "Send to Human Approval Centre": {"main": [[{"node": "Human Approval Gate", "type": "main", "index": 0}]]}
+  },
+  "pinData": {},
+  "settings": {"executionOrder": "v1", "saveManualExecutions": true, "saveExecutionProgress": true, "saveDataErrorExecution": "all", "saveDataSuccessExecution": "all"},
+  "staticData": null,
+  "tags": []
+}

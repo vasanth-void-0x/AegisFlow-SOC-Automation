@@ -43,8 +43,9 @@ async def enrich_incident_indicators(incident_id: str, db: Session = Depends(get
                 EnrichmentResult(
                     indicator_type=indicator.get("type", "unknown"),
                     value=indicator.get("value", ""),
-                    source="demo",
+                    source="unavailable",
                     provider="error",
+                    provider_status="unavailable",
                     error=str(exc),
                 )
             )

@@ -9,6 +9,20 @@ class ResultSource(str, enum.Enum):
     live = "live"          # fetched from a real external provider just now
     cached = "cached"       # served from local cache (previously fetched live)
     demo = "demo"          # provider unavailable/no key - deterministic mock data
+    unavailable = "unavailable"  # no trustworthy provider verdict was produced
+
+
+class ProviderStatus(str, enum.Enum):
+    live = "live"
+    cached = "cached"
+    not_configured = "not_configured"
+    authentication_failed = "authentication_failed"
+    rate_limited = "rate_limited"
+    not_found = "not_found"
+    timeout = "timeout"
+    unavailable = "unavailable"
+    not_applicable = "not_applicable"
+    demo = "demo"
 
 
 class MitreTechnique(BaseModel):
@@ -39,6 +53,7 @@ class EnrichmentResult(BaseModel):
     is_public: bool | None = None
     source: ResultSource
     provider: str
+    provider_status: ProviderStatus | None = None
     virustotal: VirusTotalSummary | None = None
     geo: GeoInfo | None = None
     mitre_techniques: list[MitreTechnique] = Field(default_factory=list)

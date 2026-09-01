@@ -85,6 +85,7 @@ class Settings(BaseSettings):
 
     # --- MCP ---
     mcp_tool_timeout_seconds: float = Field(default=10.0)
+    mcp_gateway_api_key: str = Field(default="")
     siem_encryption_key: str = Field(default="")
     siem_request_timeout_seconds: float = Field(default=15.0)
     siem_sync_limit: int = Field(default=500)
