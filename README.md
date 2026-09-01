@@ -3,7 +3,7 @@
 [![Live](https://img.shields.io/badge/LIVE-SOC%20DASHBOARD-28d7f2?style=for-the-badge&logo=vercel&logoColor=white)](https://blueorch-soc-automation.vercel.app/)
 [![React](https://img.shields.io/badge/React-TypeScript-087ea4?style=flat-square&logo=react)](frontend/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-Backend-009688?style=flat-square&logo=fastapi)](backend/)
-[![Tests](https://img.shields.io/badge/Backend%20Tests-127%20Passing-3ecf8e?style=flat-square)](#testing)
+[![Tests](https://img.shields.io/badge/Backend%20Tests-128%20Passing-3ecf8e?style=flat-square)](#testing)
 
 ### [Launch the live SOC dashboard →](https://blueorch-soc-automation.vercel.app/)
 
@@ -47,7 +47,7 @@ evidence-linked SOC automation workflows.
 | 18 | n8n MCP Deep Investigation V3 | ✅ |
 | 19 | End-to-end agent → MCP → approval → contained verification | ✅ |
 
-**127 backend tests passing** in the verified combined FastAPI/MCP test suite.
+**128 backend tests passing** in the verified combined FastAPI/MCP test suite.
 
 ## Architecture
 
@@ -141,6 +141,23 @@ uvicorn app.main:app --reload --port 8000
 
 Visit `http://localhost:8000/api/v1/health` — you should see `{"status": "ok", ...}`.
 Interactive API docs: `http://localhost:8000/docs`.
+
+#### Enable Login / RBAC
+
+Authentication is opt-in. Generate independent secrets, set them in the deployment environment, and
+redeploy before creating the first account:
+
+```env
+AUTH_ENABLED=true
+AUTH_SECRET=<32-or-more-random-characters>
+AUTH_BOOTSTRAP_TOKEN=<different-one-time-random-token>
+AUTH_SESSION_MINUTES=480
+```
+
+Create the first admin once through `POST /api/v1/auth/bootstrap`, then remove
+`AUTH_BOOTSTRAP_TOKEN` and redeploy. Admins can create Analyst or Viewer accounts through
+`POST /api/v1/auth/users`. Sessions use a Secure, httpOnly, SameSite=Strict cookie in production;
+plaintext passwords and session tokens are never returned by the API.
 
 ### 2. Frontend
 
