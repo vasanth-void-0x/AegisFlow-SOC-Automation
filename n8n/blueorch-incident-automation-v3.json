@@ -56,7 +56,7 @@
         ]},
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\"status\":\"triaging\"}",
+        "jsonBody": "={{ { status: 'triaging', service_key: $env.BLUEORCH_MCP_KEY } }}",
         "options": {"timeout": 10000}
       },
       "id": "claim-incident",
@@ -150,7 +150,7 @@
         ]},
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\"status\":\"pending_approval\"}",
+        "jsonBody": "={{ { status: 'pending_approval', service_key: $env.BLUEORCH_MCP_KEY } }}",
         "options": {"timeout": 10000}
       },
       "id": "pending-approval",
@@ -180,7 +180,7 @@
         ]},
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\"status\":\"new\"}",
+        "jsonBody": "={{ { status: 'new', service_key: $env.BLUEORCH_MCP_KEY } }}",
         "options": {"timeout": 10000}
       },
       "id": "release-for-retry",
