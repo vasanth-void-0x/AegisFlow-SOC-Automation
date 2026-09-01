@@ -1,5 +1,34 @@
 # BlueOrch n8n Orchestration
 
+## Recommended: incident-driven V2
+
+Import **`blueorch-incident-automation-v2.json`** for the current BlueOrch
+architecture. It does not accept raw endpoint logs. Agent, JSON webhook,
+syslog, file, and SIEM inputs first create durable incidents in BlueOrch; the
+workflow then polls the production API every 15 seconds and processes one new
+incident at a time.
+
+The V2 flow is:
+
+1. Fetch the next incident with status `new`.
+2. Claim it by changing its status to `triaging`.
+3. Enrich its indicators and run Groq AI triage.
+4. For a high/critical true positive with a valid response target, create a
+   pending response proposal and move the incident to `pending_approval`.
+5. Stop at the human approval gate. Approval or rejection happens only in the
+   BlueOrch Approval Centre. Approval immediately invokes the backend's safe
+   response adapter and records the execution in the audit timeline.
+
+Because local n8n pulls from the public BlueOrch API, Vercel does not need to
+reach `localhost:5678`, and no public n8n tunnel is required. If n8n is
+offline, incidents remain safely stored with status `new` and are picked up
+when n8n returns.
+
+Import the workflow, publish it, and keep n8n running. `Manual Test` can be
+used to process one waiting incident immediately.
+
+## Legacy webhook workflow
+
 Two workflows:
 
 - **`blueorch-workflow.json`** - the main pipeline: webhook -> create incident ->
