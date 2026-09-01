@@ -29,3 +29,4 @@ def test_protected_status_updates_use_mcp_service_key() -> None:
             "name": "X-BlueOrch-MCP-Key",
             "value": "={{$env.BLUEORCH_MCP_KEY}}",
         } in headers
+        assert "service_key: $env.BLUEORCH_MCP_KEY" in nodes[name]["parameters"]["jsonBody"]
