@@ -22,7 +22,7 @@ except ModuleNotFoundError:  # Main API venv intentionally excludes the isolated
 
 from app.core.config import get_settings
 from app.core.logging import configure_logging, get_logger
-from app.database.session import Base, engine
+from app.database.session import initialize_schema
 from app.mcp_server.executor import ALLOWED_TOOLS, execute_tool
 import app.models  # noqa: F401 - registers all ORM tables
 
@@ -97,8 +97,7 @@ async def create_response_proposal(
 
 
 def main() -> None:
-    if settings.database_url.startswith("sqlite"):
-        Base.metadata.create_all(bind=engine)
+    initialize_schema()
     logger.info("Starting BlueOrch MCP server with %d allowlisted tools", len(ALLOWED_TOOLS))
     mcp.run(transport="stdio")
 

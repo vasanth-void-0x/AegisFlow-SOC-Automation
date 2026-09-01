@@ -6,6 +6,8 @@ from sqlalchemy.orm import Session
 from app.ai.investigation_service import run_deep_investigation
 from app.ai.triage_service import run_triage
 from app.api.mcp_gateway import require_mcp_key
+from app.core.deps import require_operator
+from app.models.user import User
 from app.database.session import get_db
 from app.models.triage import TriageRecord
 from app.rag.retriever import format_citation, retrieve_runbook
@@ -37,7 +39,7 @@ async def trigger_deep_investigation(
     response_model=TriageRecordOut,
     responses={404: {"description": "Incident not found"}},
 )
-async def trigger_triage(incident_id: str, db: Session = Depends(get_db)) -> TriageRecordOut:
+async def trigger_triage(incident_id: str, db: Session = Depends(get_db), _: User = Depends(require_operator)) -> TriageRecordOut:
     incident = get_incident(db, incident_id)
     if incident is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Incident {incident_id} not found")

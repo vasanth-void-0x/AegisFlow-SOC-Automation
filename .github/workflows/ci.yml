@@ -153,10 +153,10 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Build backend image
-        run: docker build -t aegisflow-backend:ci ./backend
+        run: docker build -t blueorch-backend:ci ./backend
 
       - name: Build frontend image
-        run: docker build -t aegisflow-frontend:ci ./frontend
+        run: docker build -t blueorch-frontend:ci ./frontend
 
       - name: Scan backend image
         uses: aquasecurity/trivy-action@master

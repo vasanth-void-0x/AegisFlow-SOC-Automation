@@ -6,3 +6,4 @@ from app.models.timeline import TimelineEvent  # noqa: F401
 from app.models.triage import TriageRecord  # noqa: F401
 from app.models.siem_connection import SiemConnection  # noqa: F401
 from app.models.log_agent import LogAgent  # noqa: F401
+from app.models.user import User  # noqa: F401

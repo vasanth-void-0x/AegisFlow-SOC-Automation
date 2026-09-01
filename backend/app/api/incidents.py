@@ -4,6 +4,8 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.database.session import get_db
+from app.core.deps import require_operator_or_mcp
+from app.models.user import User
 from app.models.incident import IncidentStatus, Severity
 from app.schemas.incident import AlertIngest, IncidentListOut, IncidentOut
 from app.services.incident_service import (
@@ -85,7 +87,7 @@ def get_incident_by_id(incident_id: str, db: Session = Depends(get_db)) -> Incid
     response_model=IncidentOut,
     responses={404: {"description": "Incident not found"}},
 )
-def patch_incident_status(incident_id: str, body: UpdateStatusRequest, db: Session = Depends(get_db)) -> IncidentOut:
+def patch_incident_status(incident_id: str, body: UpdateStatusRequest, db: Session = Depends(get_db), _: User = Depends(require_operator_or_mcp)) -> IncidentOut:
     """Update an incident's status. Used by the n8n orchestration workflow."""
     incident = update_incident_status(db, incident_id, body.status.value)
     if incident is None:

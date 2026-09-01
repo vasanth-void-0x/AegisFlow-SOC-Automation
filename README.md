@@ -266,9 +266,15 @@ See [evaluation/eval_report.md](evaluation/eval_report.md) for the latest run.
 - Remote direct-log collection — optional `X-BlueOrch-Key` verification, payload limits,
   normalization, and event-id/fingerprint deduplication.
 
+**Authentication status (honest deployment note):**
+- BlueOrch now includes an opt-in database-backed Admin/Analyst/Viewer RBAC foundation with an
+  httpOnly signed session cookie. It is disabled by default and must be initialized with a one-time
+  bootstrap token. Approval audit actors are derived from the authenticated session, not client input.
+- This is suitable for a controlled portfolio or single-team deployment after configuration and testing.
+  It is not a replacement for enterprise SSO, MFA, centralized identity lifecycle, or multi-tenant isolation.
+
 **Explicitly out of scope for this portfolio build:**
-- The environment-backed Admin/Analyst/Viewer login is suitable for this portfolio deployment; a
-  multi-user production SOC should replace it with an enterprise identity provider and managed sessions.
+- Enterprise SSO/MFA and centralized identity lifecycle management.
 - Multi-tenant isolation.
 - Encryption at rest for the SQLite database.
 - The `ENABLE_REAL_RESPONSE_ADAPTER` flag exists but no real adapter is implemented — response actions

@@ -10,6 +10,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.api.approvals import router as approvals_router
 from app.api.audit import router as audit_router
+from app.api.auth import router as auth_router
 from app.api.enrichment import router as enrichment_router
 from app.api.direct_logs import router as direct_logs_router
 from app.api.health import router as health_router
@@ -22,7 +23,8 @@ from app.api.reports import router as reports_router
 from app.core.config import get_settings
 from app.core.logging import configure_logging, get_logger
 from app.core.rate_limit import RateLimitMiddleware
-from app.database.session import Base, engine
+from app.core.security import validate_auth_configuration
+from app.database.session import initialize_schema
 import app.models  # noqa: F401 - ensures all ORM models are registered on Base.metadata
 
 settings = get_settings()
@@ -32,9 +34,10 @@ logger = get_logger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    validate_auth_configuration()
     # Bootstrap the schema for both local SQLite and managed PostgreSQL.
     # SQLAlchemy emits idempotent CREATE TABLE statements for missing tables.
-    Base.metadata.create_all(bind=engine)
+    initialize_schema()
     logger.info("BlueOrch started | demo_mode=%s | env=%s", settings.demo_mode, settings.environment)
     yield
 
@@ -85,6 +88,7 @@ def create_app() -> FastAPI:
         )
 
     app.include_router(health_router)
+    app.include_router(auth_router, prefix="/api/v1")
     app.include_router(incidents_router, prefix="/api/v1")
     app.include_router(enrichment_router, prefix="/api/v1")
     app.include_router(triage_router, prefix="/api/v1")

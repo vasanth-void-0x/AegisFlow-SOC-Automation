@@ -6,8 +6,10 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
+from app.core.deps import require_admin, require_operator, require_operator_or_mcp
 from app.database.session import get_db
 from app.models.response_proposal import ActionType, ResponseProposal
+from app.models.user import User
 from app.schemas.approval import ApprovalDecisionRequest, ProposalOut, TimelineEventOut
 from app.services import approval_service
 from app.services.incident_service import get_incident
@@ -29,7 +31,7 @@ class CreateProposalRequest(BaseModel):
     status_code=status.HTTP_201_CREATED,
     responses={404: {"description": "Incident not found"}, 422: {"description": "Invalid action_type"}},
 )
-def create_proposal(incident_id: str, body: CreateProposalRequest, db: Session = Depends(get_db)) -> ProposalOut:
+def create_proposal(incident_id: str, body: CreateProposalRequest, db: Session = Depends(get_db), user: User = Depends(require_operator_or_mcp)) -> ProposalOut:
     """Create a response proposal via HTTP (same semantics as the MCP create_response_proposal tool)."""
     incident = get_incident(db, incident_id)
     if incident is None:
@@ -49,7 +51,7 @@ def create_proposal(incident_id: str, body: CreateProposalRequest, db: Session =
         action_type=ActionType(body.action_type),
         target=body.target,
         justification=body.justification,
-        proposed_by=body.proposed_by,
+        proposed_by=user.username,
         expires_at=expires_at,
     )
     db.add(proposal)
@@ -61,7 +63,7 @@ def create_proposal(incident_id: str, body: CreateProposalRequest, db: Session =
         incident_id,
         event_type="response_proposal_created",
         description=f"Response proposal created: {proposal.action_type.value} on {proposal.target}",
-        actor=body.proposed_by,
+        actor=user.username,
         metadata={"proposal_id": proposal.id},
     )
     return ProposalOut.model_validate(proposal)
@@ -87,9 +89,9 @@ def get_approval(proposal_id: str, db: Session = Depends(get_db)) -> ProposalOut
 
 
 @router.post("/approvals/{proposal_id}/approve", response_model=ProposalOut)
-def approve_proposal(proposal_id: str, body: ApprovalDecisionRequest, db: Session = Depends(get_db)) -> ProposalOut:
+def approve_proposal(proposal_id: str, body: ApprovalDecisionRequest, db: Session = Depends(get_db), user: User = Depends(require_operator)) -> ProposalOut:
     try:
-        proposal = approval_service.approve_proposal(db, proposal_id, approver=body.approver, reason=body.reason)
+        proposal = approval_service.approve_proposal(db, proposal_id, approver=user.username, reason=body.reason)
     except approval_service.ProposalNotFoundError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
     except approval_service.InvalidProposalStateError as exc:
@@ -98,9 +100,9 @@ def approve_proposal(proposal_id: str, body: ApprovalDecisionRequest, db: Sessio
 
 
 @router.post("/approvals/{proposal_id}/reject", response_model=ProposalOut)
-def reject_proposal(proposal_id: str, body: ApprovalDecisionRequest, db: Session = Depends(get_db)) -> ProposalOut:
+def reject_proposal(proposal_id: str, body: ApprovalDecisionRequest, db: Session = Depends(get_db), user: User = Depends(require_operator)) -> ProposalOut:
     try:
-        proposal = approval_service.reject_proposal(db, proposal_id, approver=body.approver, reason=body.reason)
+        proposal = approval_service.reject_proposal(db, proposal_id, approver=user.username, reason=body.reason)
     except approval_service.ProposalNotFoundError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
     except approval_service.InvalidProposalStateError as exc:
@@ -109,9 +111,9 @@ def reject_proposal(proposal_id: str, body: ApprovalDecisionRequest, db: Session
 
 
 @router.post("/approvals/{proposal_id}/rollback", response_model=ProposalOut)
-def rollback_proposal(proposal_id: str, body: ApprovalDecisionRequest, db: Session = Depends(get_db)) -> ProposalOut:
+def rollback_proposal(proposal_id: str, body: ApprovalDecisionRequest, db: Session = Depends(get_db), user: User = Depends(require_admin)) -> ProposalOut:
     try:
-        proposal = approval_service.rollback_proposal(db, proposal_id, approver=body.approver, reason=body.reason)
+        proposal = approval_service.rollback_proposal(db, proposal_id, approver=user.username, reason=body.reason)
     except approval_service.ProposalNotFoundError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
     except approval_service.InvalidProposalStateError as exc:

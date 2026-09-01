@@ -34,6 +34,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const url = path.startsWith('/api/v1') || path === '/health' ? path : `${BASE}${path}`
   const res = await fetch(url, {
     ...init,
+    credentials: 'same-origin',
     headers: { 'Content-Type': 'application/json', ...(init?.headers ?? {}) },
   })
   if (!res.ok) {
@@ -51,6 +52,10 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export const api = {
+  authConfig: () => request<{enabled:boolean;initialized:boolean}>('/auth/config'),
+  currentUser: () => request<{id:string;username:string;display_name:string;role:'admin'|'analyst'|'viewer';is_active:boolean}>('/auth/me'),
+  login: (username:string,password:string) => request<{id:string;username:string;display_name:string;role:'admin'|'analyst'|'viewer';is_active:boolean}>('/auth/login',{method:'POST',body:JSON.stringify({username,password})}),
+  logout: () => request<void>('/auth/logout',{method:'POST'}),
   health: () => request<HealthStatus>('/api/v1/health'),
 
   listIncidents: (params: {

@@ -83,6 +83,12 @@ class Settings(BaseSettings):
     enable_real_response_adapter: bool = Field(default=False)  # must stay False by default
     approval_expiry_minutes: int = Field(default=30)
 
+    # --- Human authentication / RBAC ---
+    auth_enabled: bool = Field(default=False)
+    auth_secret: str = Field(default="")
+    auth_session_minutes: int = Field(default=480)
+    auth_bootstrap_token: str = Field(default="")
+
     # --- MCP ---
     mcp_tool_timeout_seconds: float = Field(default=10.0)
     mcp_gateway_api_key: str = Field(default="")

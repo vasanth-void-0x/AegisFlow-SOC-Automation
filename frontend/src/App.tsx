@@ -8,22 +8,13 @@ import { McpToolHistoryPage } from './pages/McpToolHistoryPage'
 import { AuditLogPage } from './pages/AuditLogPage'
 import { SystemHealthPage } from './pages/SystemHealthPage'
 import { SettingsPage } from './pages/SettingsPage'
+import { AuthProvider, useAuth } from './auth/AuthContext'
+import { LoginPage } from './pages/LoginPage'
+
+function SecuredApp(){const {loading,enabled,user}=useAuth();if(loading)return <div className="auth-loading">CONNECTING TO SECURITY CORE…</div>;if(enabled&&!user)return <LoginPage/>;return <BrowserRouter><Routes><Route element={<AppShell />}><Route path="/" element={<OverviewPage />} /><Route path="/incidents" element={<IncidentQueuePage />} /><Route path="/incidents/:id" element={<IncidentDetailPage />} /><Route path="/approvals" element={<ApprovalCentrePage />} /><Route path="/mcp-tools" element={<McpToolHistoryPage />} /><Route path="/audit" element={<AuditLogPage />} /><Route path="/health" element={<SystemHealthPage />} /><Route path="/settings" element={<SettingsPage />} /></Route></Routes></BrowserRouter>}
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route element={<AppShell />}>
-          <Route path="/" element={<OverviewPage />} />
-          <Route path="/incidents" element={<IncidentQueuePage />} />
-          <Route path="/incidents/:id" element={<IncidentDetailPage />} />
-          <Route path="/approvals" element={<ApprovalCentrePage />} />
-          <Route path="/mcp-tools" element={<McpToolHistoryPage />} />
-          <Route path="/audit" element={<AuditLogPage />} />
-          <Route path="/health" element={<SystemHealthPage />} />
-          <Route path="/settings" element={<SettingsPage />} />
-        </Route>
-      </Routes>
-    </BrowserRouter>
+    <AuthProvider><SecuredApp/></AuthProvider>
   )
 }

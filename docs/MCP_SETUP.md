@@ -63,12 +63,12 @@ Add to your Claude Desktop MCP config (`claude_desktop_config.json`):
 ```json
 {
   "mcpServers": {
-    "aegisflow-security": {
+    "blueorch-security": {
       "command": "/absolute/path/to/backend/.venv-mcp/bin/python",
       "args": ["-m", "app.mcp_server.server"],
       "cwd": "/absolute/path/to/backend",
       "env": {
-        "DATABASE_URL": "sqlite:////absolute/path/to/backend/aegisflow.db",
+        "DATABASE_URL": "sqlite:////absolute/path/to/backend/blueorch.db",
         "VIRUSTOTAL_API_KEY": ""
       }
     }

@@ -8,7 +8,7 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - DATABASE_URL=sqlite:////data/aegisflow.db
+      - DATABASE_URL=sqlite:////data/blueorch.db
       - DEMO_MODE=${DEMO_MODE:-true}
       - GROQ_API_KEY=${GROQ_API_KEY:-}
       - VIRUSTOTAL_API_KEY=${VIRUSTOTAL_API_KEY:-}
@@ -31,7 +31,7 @@ services:
       context: ./backend
       dockerfile: Dockerfile.mcp
     environment:
-      - DATABASE_URL=sqlite:////data/aegisflow.db
+      - DATABASE_URL=sqlite:////data/blueorch.db
       - VIRUSTOTAL_API_KEY=${VIRUSTOTAL_API_KEY:-}
     volumes:
       - backend-data:/data
@@ -65,7 +65,7 @@ services:
       - N8N_BASIC_AUTH_USER=${N8N_USER:-admin}
       - N8N_BASIC_AUTH_PASSWORD=${N8N_PASSWORD:-changeme}
       - WEBHOOK_URL=http://localhost:5678/
-      - AEGISFLOW_API_BASE=http://backend:8000/api/v1
+      - BLUEORCH_API_BASE=http://backend:8000/api/v1
     volumes:
       - n8n-data:/home/node/.n8n
       - ./n8n:/workflows:ro
