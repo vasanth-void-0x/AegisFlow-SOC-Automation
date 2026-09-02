@@ -16,7 +16,7 @@ export function OverviewPage() {
   const [incidentsExpanded,setIncidentsExpanded]=useState(false)
   const [error,setError]=useState<string|null>(null)
   useLivePolling(async()=>{try{const [incidentsResult,kpiResult,timelineResult,approvalsResult]=await Promise.all([api.listIncidents({page:1,page_size:50}),api.getDashboardKpis(),api.getAuditTimeline(12),api.listApprovals({status:'pending'})]);setIncidents(incidentsResult.items);setKpis(kpiResult);setTimeline(timelineResult);setPendingApprovals(approvalsResult);setError(null)}catch(e){setError(e instanceof Error?e.message:'Live telemetry update failed')}},{intervalMs:5_000})
-  if(error)return <div className="page-pad"><ErrorState message={error}/></div>
+  if(error&&(!incidents||!kpis))return <div className="page-pad"><ErrorState message={error}/></div>
   if(!incidents||!kpis)return <div className="page-pad"><LoadingState label="Synchronizing incident telemetry"/></div>
   const recent=incidents.slice(0,7),total=Math.max(kpis.total_alerts,1)
   return <div className="overview-page page-pad">
