@@ -29,7 +29,8 @@ Content-Type: application/json
 ```
 
 Both stdio and HTTPS calls pass through the same allowlist, timeout, redaction,
-and production database audit path.
+and database audit path. Rotate any key that has appeared in a screenshot, terminal transcript, exported
+workflow, or chat. The backend and n8n values must be changed together.
 
 ## Why a separate environment?
 
