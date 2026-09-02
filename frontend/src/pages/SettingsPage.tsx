@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { api, ApiError } from '../api/client'
 import type { LogAgentRegistration, LogAgentStatus, SiemConnectInput, SiemConnection, SiemProvider } from '../api/types'
 import { LoadingState } from '../components/Panel'
+import { useLivePolling } from '../hooks/useLivePolling'
 
 const INITIAL: SiemConnectInput = {
   provider: 'splunk', base_url: '', token: '', username: '', password: '', index_name: '', verify_ssl: true,
@@ -91,7 +92,7 @@ function DirectLogSetup() {
   const [method, setMethod] = useState<DirectMethod>('agent')
   const [sourceName, setSourceName] = useState('BLUEORCH-WIN-01')
   const [profile, setProfile] = useState<'security'|'system'|'full'>('security')
-  const [registrationToken, setRegistrationToken] = useState('')
+  const [registrationToken, setRegistrationToken] = useState(()=>sessionStorage.getItem('blueorch.agent.registrationToken') ?? '')
   const [registered, setRegistered] = useState<LogAgentRegistration | null>(null)
   const [agents, setAgents] = useState<LogAgentStatus[]>([])
   const [directNotice, setDirectNotice] = useState<{kind:'ok'|'error';text:string}|null>(null)
@@ -102,6 +103,11 @@ function DirectLogSetup() {
     { id: 'syslog', icon: '>>', title: 'Syslog Forwarder', detail: 'Firewall · IDS · Servers' },
     { id: 'file', icon: '↑', title: 'Secure File', detail: '.log · .json · .csv · .evtx' },
   ]
+  const refreshAgents = useCallback(async(showNotice=false) => { if(!registrationToken)return;try{setAgents(await api.listLogAgents(registrationToken));if(showNotice)setDirectNotice({kind:'ok',text:'Agent status refreshed.'})}catch(error){if(showNotice)setDirectNotice({kind:'error',text:error instanceof Error?error.message:'Status failed'})}},[registrationToken])
+  useEffect(()=>{if(registrationToken)sessionStorage.setItem('blueorch.agent.registrationToken',registrationToken);else sessionStorage.removeItem('blueorch.agent.registrationToken')},[registrationToken])
+  useLivePolling(()=>refreshAgents(false),{enabled:Boolean(registrationToken),intervalMs:10_000})
+  const agentOnline = agents.some(item=>item.status==='online')
+  const agentStatusLabel = !registrationToken ? 'STATUS AUTH REQUIRED' : agentOnline ? 'AGENT ONLINE' : 'AGENT OFFLINE'
 
   return <div className="direct-log-layout">
     <section className="siem-card direct-log-card">
@@ -128,11 +134,11 @@ function DirectLogSetup() {
         </>}
         {directNotice ? <div className={`siem-notice ${directNotice.kind}`}>{directNotice.kind==='ok'?'✓':'!'}<span>{directNotice.text}</span></div> : null}
         {registered ? <div className="direct-security-note"><b>ONE-TIME DEVICE API KEY</b><p><code>{registered.api_key}</code></p><p>Copy now. BlueOrch stores only its SHA-256 hash and cannot show this key again.</p></div> : null}
-        <div className="siem-actions"><button type="button" className="secondary-action" disabled={!registrationToken} onClick={async()=>{try{setAgents(await api.listLogAgents(registrationToken));setDirectNotice({kind:'ok',text:'Agent status refreshed.'})}catch(error){setDirectNotice({kind:'error',text:error instanceof Error?error.message:'Status failed'})}}}>Refresh Status</button><button type="button" className="primary-action" disabled={!sourceName.trim()||!registrationToken||registering} onClick={async()=>{setRegistering(true);try{const result=await api.registerLogAgent({name:sourceName,platform:'windows',profile},registrationToken);setRegistered(result);setDirectNotice({kind:'ok',text:'Device registered. Copy the API key and run the installer.'})}catch(error){setDirectNotice({kind:'error',text:error instanceof Error?error.message:'Registration failed'})}finally{setRegistering(false)}}}>{registering?'Registering…':'Register Windows Device'}</button></div>
+        <div className="siem-actions"><button type="button" className="secondary-action" disabled={!registrationToken} onClick={()=>void refreshAgents(true)}>Refresh Status</button><button type="button" className="primary-action" disabled={!sourceName.trim()||!registrationToken||registering} onClick={async()=>{setRegistering(true);try{const result=await api.registerLogAgent({name:sourceName,platform:'windows',profile},registrationToken);setRegistered(result);await refreshAgents(false);setDirectNotice({kind:'ok',text:'Device registered. Copy the API key and run the installer.'})}catch(error){setDirectNotice({kind:'error',text:error instanceof Error?error.message:'Registration failed'})}finally{setRegistering(false)}}}>{registering?'Registering…':'Register Windows Device'}</button></div>
       </div>
     </section>
     <aside className="connection-summary direct-summary">
-      <div className="summary-signal"><span className={agents.some(item=>item.status==='online')?'on':''}/><div><small>24/7 COLLECTOR SIGNAL</small><b>{agents.some(item=>item.status==='online')?'AGENT ONLINE':'AGENT OFFLINE'}</b><p>{agents[0]?`${agents[0].name} · ${agents[0].events_received} events · ${formatTime(agents[0].last_seen_at)}`:'Register and start one Windows device'}</p></div></div>
+      <div className="summary-signal"><span className={agentOnline?'on':''}/><div><small>24/7 COLLECTOR SIGNAL</small><b>{agentStatusLabel}</b><p>{agents[0]?`${agents[0].name} · ${agents[0].events_received} events · ${formatTime(agents[0].last_seen_at)}`:registrationToken?'No registered agent returned':'Enter the registration token to load live agent status'}</p></div></div>
       <div className="direct-pipeline">
         <span><i>01</i><b>Collect Continuously</b><small>Background agent watches device logs</small></span>
         <span><i>02</i><b>Send Securely</b><small>HTTPS with a unique device API key</small></span>
