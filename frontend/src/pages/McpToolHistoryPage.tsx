@@ -1,15 +1,14 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { api } from '../api/client'
 import type { McpToolCallLog } from '../api/types'
 import { Panel, LoadingState, ErrorState, EmptyState } from '../components/Panel'
+import { useLivePolling } from '../hooks/useLivePolling'
 
 export function McpToolHistoryPage() {
   const [logs, setLogs] = useState<McpToolCallLog[] | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    api.getMcpToolCalls(100).then(setLogs).catch((e) => setError(e.message))
-  }, [])
+  useLivePolling(() => api.getMcpToolCalls(100).then((items) => { setLogs(items); setError(null) }).catch((e) => setError(e.message)), { intervalMs: 5_000 })
 
   return (
     <div className="p-6">
