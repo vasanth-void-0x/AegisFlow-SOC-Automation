@@ -299,6 +299,12 @@ See [evaluation/eval_report.md](evaluation/eval_report.md) for the latest run.
 
 ## Known limitations & honest notes
 
+**Delivery stage:** BlueOrch's single-team MVP is complete: ingestion → investigation → MCP evidence →
+human approval → simulated response → audit is deployed and exercised end to end. The next phase is a
+production-ready pilot focused on realtime delivery, Wazuh response integration, observability, agent-key
+lifecycle controls, workflow resilience, and load/recovery validation. Enterprise capabilities such as
+multi-tenancy and SSO remain a future roadmap, not current product claims.
+
 - **Provider-dependent enrichment:** the deployed Groq deep-investigation and remote MCP paths have been
   exercised end to end. VirusTotal reports an explicit live, not-configured, rate-limited, or provider-error
   state; a valid key is required for live reputation results and no fallback is presented as VirusTotal data.
