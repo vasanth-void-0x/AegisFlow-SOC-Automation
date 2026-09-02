@@ -11,6 +11,7 @@ import type {
 import { Panel, LoadingState, ErrorState, EmptyState } from '../components/Panel'
 import { SeverityBadge, severityColor } from '../components/SeverityBadge'
 import { StatusBadge } from '../components/StatusBadge'
+import { useLivePolling } from '../hooks/useLivePolling'
 
 const TABS = ['Overview', 'AI Investigation', 'IOC Enrichment', 'Timeline', 'Response'] as const
 type Tab = (typeof TABS)[number]
@@ -21,16 +22,10 @@ export function IncidentDetailPage() {
   const [error, setError] = useState<string | null>(null)
   const [tab, setTab] = useState<Tab>('Overview')
 
-  const reload = () => {
-    if (!id) return
-    api.getIncident(id).then(setIncident).catch((e) => setError(e.message))
-  }
+  const reload = () => { if (!id) return; return api.getIncident(id).then((item) => { setIncident(item); setError(null) }).catch((e) => setError(e.message)) }
+  useLivePolling(reload, { enabled: Boolean(id), intervalMs: 5_000 })
 
-  useEffect(() => {
-    reload()
-  }, [id])
-
-  if (error) return <div className="p-6"><ErrorState message={error} /></div>
+  if (error && !incident) return <div className="p-6"><ErrorState message={error} /></div>
   if (!incident) return <div className="p-6"><LoadingState label="Loading incident" /></div>
 
   return (
@@ -116,10 +111,8 @@ function AiInvestigationTab({ incident }: { incident: Incident }) {
   const [running, setRunning] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const load = () => api.getTriageHistory(incident.id).then(setHistory).catch((e) => setError(e.message))
-  useEffect(() => {
-    load()
-  }, [incident.id])
+  const load = () => api.getTriageHistory(incident.id).then((items) => { setHistory(items); setError(null) }).catch((e) => setError(e.message))
+  useLivePolling(load, { intervalMs: 5_000 })
 
   const runTriage = async () => {
     setRunning(true)
@@ -309,9 +302,7 @@ function TimelineTab({ incidentId }: { incidentId: string }) {
   const [events, setEvents] = useState<TimelineEvent[] | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    api.getTimeline(incidentId).then(setEvents).catch((e) => setError(e.message))
-  }, [incidentId])
+  useLivePolling(() => api.getTimeline(incidentId).then((items) => { setEvents(items); setError(null) }).catch((e) => setError(e.message)), { intervalMs: 5_000 })
 
   if (error) return <ErrorState message={error} />
   if (!events) return <LoadingState label="Loading timeline" />
@@ -343,10 +334,8 @@ function ResponseTab({ incident, onChange }: { incident: Incident; onChange: () 
   const [form, setForm] = useState({ action_type: 'block_ip', target: incident.source_ip ?? '', justification: '' })
   const [submitting, setSubmitting] = useState(false)
 
-  const load = () => api.listApprovals({ incident_id: incident.id }).then(setProposals).catch((e) => setError(e.message))
-  useEffect(() => {
-    load()
-  }, [incident.id])
+  const load = () => api.listApprovals({ incident_id: incident.id }).then((items) => { setProposals(items); setError(null) }).catch((e) => setError(e.message))
+  useLivePolling(load, { intervalMs: 5_000 })
 
   const submit = async () => {
     setSubmitting(true)
