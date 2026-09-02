@@ -87,12 +87,12 @@ export function IncidentQueuePage() {
       </div>
 
       <Panel>
-        {error && <ErrorState message={error} />}
-        {!error && !data && <LoadingState label="Loading incidents" />}
-        {!error && data && filtered && filtered.length === 0 && (
+        {error && !data && <ErrorState message={error} />}
+        {!data && !error && <LoadingState label="Loading incidents" />}
+        {data && filtered && filtered.length === 0 && (
           <EmptyState title="No incidents match" description="Try clearing filters or search terms." />
         )}
-        {!error && filtered && filtered.length > 0 && (
+        {filtered && filtered.length > 0 && (
           <div className="-m-4 divide-y divide-[var(--color-graphite)]">
             {filtered.map((inc) => (
               <Link
