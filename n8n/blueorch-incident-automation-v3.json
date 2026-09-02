@@ -1,5 +1,5 @@
 {
-  "name": "BlueOrch - MCP Deep Investigation V3",
+  "name": "BlueOrch - MCP Deep Investigation V3.1 RBAC Fix",
   "nodes": [
     {
       "parameters": {"rule": {"interval": [{"field": "seconds", "secondsInterval": 15}]}},
