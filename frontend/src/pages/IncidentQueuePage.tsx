@@ -5,6 +5,7 @@ import type { Incident, IncidentStatus, Severity } from '../api/types'
 import { Panel, LoadingState, ErrorState, EmptyState } from '../components/Panel'
 import { SeverityBadge, severityColor } from '../components/SeverityBadge'
 import { StatusBadge } from '../components/StatusBadge'
+import { useLivePolling } from '../hooks/useLivePolling'
 
 const SEVERITIES: Severity[] = ['critical', 'high', 'medium', 'low']
 const STATUSES: IncidentStatus[] = ['new', 'triaging', 'pending_approval', 'contained', 'resolved', 'closed']
@@ -18,18 +19,16 @@ export function IncidentQueuePage() {
   const [search, setSearch] = useState('')
   const pageSize = 15
 
-  useEffect(() => {
-    setData(null)
-    api
+  useEffect(() => { setData(null) }, [page, severity, status])
+  useLivePolling(() => api
       .listIncidents({
         page,
         page_size: pageSize,
         severity: severity || undefined,
         status: status || undefined,
       })
-      .then(setData)
-      .catch((e) => setError(e.message))
-  }, [page, severity, status])
+      .then((result) => { setData(result); setError(null) })
+      .catch((e) => setError(e.message)), { intervalMs: 5_000 })
 
   const filtered = data?.items.filter(
     (i) =>
