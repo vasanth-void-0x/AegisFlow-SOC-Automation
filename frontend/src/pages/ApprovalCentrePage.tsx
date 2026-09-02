@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../api/client'
 import type { ResponseProposal } from '../api/types'
 import { Panel, LoadingState, ErrorState, EmptyState } from '../components/Panel'
 import { StatusBadge } from '../components/StatusBadge'
+import { useLivePolling } from '../hooks/useLivePolling'
 
 export function ApprovalCentrePage() {
   const [proposals, setProposals] = useState<ResponseProposal[] | null>(null)
@@ -12,15 +13,11 @@ export function ApprovalCentrePage() {
   const [busyId, setBusyId] = useState<string | null>(null)
   const [approver, setApprover] = useState('analyst@soc')
 
-  const load = () =>
-    api
+  const load = () => api
       .listApprovals(statusFilter ? { status: statusFilter } : {})
-      .then(setProposals)
+      .then((items) => { setProposals(items); setError(null) })
       .catch((e) => setError(e.message))
-
-  useEffect(() => {
-    load()
-  }, [statusFilter])
+  useLivePolling(load, { intervalMs: 5_000 })
 
   const act = async (id: string, action: 'approve' | 'reject' | 'rollback') => {
     const reason = window.prompt(`Reason for ${action}?`)
