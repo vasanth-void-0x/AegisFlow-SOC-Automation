@@ -3,7 +3,10 @@
 [![Live](https://img.shields.io/badge/LIVE-SOC%20DASHBOARD-28d7f2?style=for-the-badge&logo=vercel&logoColor=white)](https://blueorch-soc-automation.vercel.app/)
 [![React](https://img.shields.io/badge/React-TypeScript-087ea4?style=flat-square&logo=react)](frontend/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-Backend-009688?style=flat-square&logo=fastapi)](backend/)
-[![Tests](https://img.shields.io/badge/Backend%20Tests-128%20Passing-3ecf8e?style=flat-square)](#testing)
+[![MVP](https://img.shields.io/badge/MVP-Complete-3ecf8e?style=flat-square)](#delivery-stage)
+[![Tests](https://img.shields.io/badge/Backend%20Tests-131%20Passing-3ecf8e?style=flat-square)](#testing)
+[![MCP](https://img.shields.io/badge/MCP-7%20Audited%20Tools-7c5cff?style=flat-square)](docs/MCP_SETUP.md)
+[![Response](https://img.shields.io/badge/Response-Human%20Gated-ff8b3d?style=flat-square)](#security-model)
 
 ### [Launch the live SOC dashboard →](https://blueorch-soc-automation.vercel.app/)
 
@@ -15,39 +18,60 @@ file pipeline. It normalizes events, enriches indicators of compromise, runs str
 SOC runbooks with RAG, exposes seven allowlisted security tools through an authenticated remote MCP gateway, orchestrates deep investigation with n8n V3,
 requires human approval before any response action executes, and produces an evidence-linked final report.
 
-**This is a real system, not a demo with static values.** Every screen in the dashboard is backed by a
-live API call. Where a paid provider (Groq, VirusTotal) isn't configured, the system falls back to
-clearly-labeled demo/fallback behavior instead of pretending to have data it doesn't.
+**This is a working system, not a static dashboard mockup.** Every operational screen is backed by live
+APIs and the incident, MCP, approval, agent, and audit views refresh automatically. When Groq is not
+configured, triage uses a clearly identified rule-based fallback. VirusTotal never fabricates a verdict:
+the UI reports live, not-configured, rate-limited, not-found, or provider-error state explicitly.
 
 The desktop-first command center uses fixed navigation and response rails, a live processor topology,
 animated circuit telemetry, health monitoring, incident investigation views, approval controls, and
 evidence-linked SOC automation workflows.
 
-## Project status
+## At a glance
 
-| Phase | Description | Status |
+| | |
+|---|---|
+| **Delivery stage** | Single-team MVP complete; production-ready pilot is next |
+| **Core flow** | Telemetry → enrichment → AI/MCP investigation → human approval → safe simulated response → audit |
+| **Inputs** | Splunk, Wazuh, Windows collector, direct API, webhook/syslog/file relay |
+| **Automation** | n8n V3.1, Groq structured analysis, RAG runbooks, 7 audited MCP tools |
+| **Safety** | Admin/Analyst/Viewer RBAC, signed sessions, scoped keys, rate limits, no autonomous destructive action |
+| **Deployment** | React + FastAPI on Vercel, persistent PostgreSQL in deployed environments |
+
+## Documentation
+
+| Guide | Use it for |
+|---|---|
+| [Documentation hub](docs/README.md) | Start here for every technical guide |
+| [Architecture](docs/ARCHITECTURE.md) | Components, data flow, trust boundaries, state transitions |
+| [MCP setup](docs/MCP_SETUP.md) | Remote gateway, local clients, tool catalog, security guardrails |
+| [n8n V3 setup](n8n/README.md) | Import, environment, RBAC-safe requests, workflow branches |
+| [Windows collector](collector/README.md) | Install, run, heartbeat, retry queue, troubleshooting |
+| [Production roadmap](docs/ROADMAP.md) | MVP boundary, production pilot, future enterprise phase |
+
+## Delivery stage
+
+| Stage | Meaning | Status |
 |---|---|---|
-| 1 | Alert ingestion & storage | ✅ |
-| 2 | Threat-intel enrichment (VirusTotal, GeoIP, MITRE) | ✅ |
-| 3 | Structured AI triage (Groq) | ✅ |
-| 4 | RAG-based SOC runbooks | ✅ |
-| 5 | MCP security server (7 tools) | ✅ |
-| 6 | n8n orchestration workflow | ✅ |
-| 7 | Human approval & response | ✅ |
-| 8 | React SOC dashboard | ✅ |
-| 9 | Security tests | ✅ |
-| 10 | AI evaluation | ✅ |
-| 11 | Docker & CI | ✅ (Docker builds are syntax-validated, not build-tested — see [Limitations](#known-limitations--honest-notes)) |
-| 12 | Splunk & Wazuh SIEM connectivity | ✅ |
-| 13 | Direct log normalization, deduplication & bulk ingestion | ✅ |
-| 14 | Windows 24×7 Event Log collector, heartbeat & disk retry | ✅ |
-| 15 | Final incident report API | ✅ |
-| 16 | Authenticated remote MCP HTTPS gateway & shared audit executor | ✅ |
-| 17 | Evidence-grounded deep AI investigation | ✅ |
-| 18 | n8n MCP Deep Investigation V3 | ✅ |
-| 19 | End-to-end agent → MCP → approval → contained verification | ✅ |
+| **MVP** | Complete single-team incident investigation and human-gated response workflow | ✅ Complete |
+| **Production-ready pilot** | Realtime event delivery, Wazuh response, observability, resilience and recovery validation | 🟡 Next phase |
+| **Enterprise platform** | Multi-tenancy, SSO, HA, compliance and organization-scale operations | ⚪ Future roadmap |
 
-**128 backend tests passing** in the verified combined FastAPI/MCP test suite.
+## MVP capability status
+
+| Capability | Included | Status |
+|---|---|---|
+| Telemetry ingestion | Splunk/Wazuh sync, direct logs, Windows collector, normalization, deduplication | ✅ |
+| Investigation | VirusTotal/GeoIP/MITRE enrichment, Groq analysis, RAG runbooks | ✅ |
+| MCP security | 7 typed tools, API-key authentication, allowlist, timeout, redaction, audit | ✅ |
+| Orchestration | n8n V3.1 polling, safe claim, deep investigation, retry path, approval branch | ✅ |
+| Human control | Pending proposal, Analyst/Admin decision, simulated execution, rollback record | ✅ |
+| Identity | Database-backed Admin/Analyst/Viewer RBAC and signed httpOnly sessions | ✅ |
+| Live operations UI | Incidents, approvals, MCP history, audit, agent heartbeat and health refresh | ✅ |
+| Assurance | 131 backend tests, frontend production build, AI evaluation, CI checks | ✅ |
+
+**131 backend tests pass** in the verified combined FastAPI/MCP suite. See [Testing](#testing) and
+[Known limitations](#known-limitations--honest-notes) for the exact assurance boundary.
 
 ## Architecture
 
@@ -60,7 +84,7 @@ flowchart TB
         Q[Webhook / Syslog Relay / File] -->|single or bulk logs| B
     end
 
-    subgraph Backend["Backend (FastAPI + SQLAlchemy + SQLite)"]
+    subgraph Backend["Backend (FastAPI + SQLAlchemy + PostgreSQL / SQLite)"]
         B --> C[Incident Store]
         C --> D[Threat-Intel Enrichment<br/>VirusTotal + GeoIP + MITRE]
         D --> E[Deep AI Investigation<br/>Groq structured JSON]
@@ -107,7 +131,7 @@ BlueOrch-SOC-Automation/
 │   │   ├── ai/                 Groq client + triage orchestration
 │   │   ├── rag/                 Chunking, embeddings, vector store, retriever
 │   │   └── mcp_server/           MCP tools, schemas, audit, redaction
-│   ├── tests/                    127 tests
+│   ├── tests/                    131 verified test cases
 │   ├── requirements.txt           Main backend deps
 │   └── requirements-mcp.txt        Isolated MCP server deps (see below)
 ├── frontend/                React + TypeScript + Vite SOC dashboard
@@ -245,7 +269,7 @@ and deep AI require their corresponding secrets.
 
 ```bash
 cd backend
-python -m pytest -q   # 127 tests
+python -m pytest -q   # 131 verified tests
 ```
 
 Frontend:
@@ -265,7 +289,7 @@ python ../evaluation/run_eval.py
 
 See [evaluation/eval_report.md](evaluation/eval_report.md) for the latest run.
 
-## Threat model (summary)
+## Security model
 
 **In scope / mitigated:**
 - SQL injection — parameterized queries via SQLAlchemy ORM throughout; tested in `test_security.py`.
@@ -304,6 +328,8 @@ human approval → simulated response → audit is deployed and exercised end to
 production-ready pilot focused on realtime delivery, Wazuh response integration, observability, agent-key
 lifecycle controls, workflow resilience, and load/recovery validation. Enterprise capabilities such as
 multi-tenancy and SSO remain a future roadmap, not current product claims.
+
+Full phase boundaries and exit criteria: [Production roadmap](docs/ROADMAP.md).
 
 - **Provider-dependent enrichment:** the deployed Groq deep-investigation and remote MCP paths have been
   exercised end to end. VirusTotal reports an explicit live, not-configured, rate-limited, or provider-error
