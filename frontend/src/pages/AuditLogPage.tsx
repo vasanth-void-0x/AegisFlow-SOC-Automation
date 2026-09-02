@@ -1,19 +1,15 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../api/client'
 import type { TimelineEvent } from '../api/types'
 import { Panel, LoadingState, ErrorState, EmptyState } from '../components/Panel'
+import { useLivePolling } from '../hooks/useLivePolling'
 
 export function AuditLogPage() {
   const [events, setEvents] = useState<TimelineEvent[] | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    api
-      .getAuditTimeline(100)
-      .then(setEvents)
-      .catch((e) => setError(e.message))
-  }, [])
+  useLivePolling(() => api.getAuditTimeline(100).then((items) => { setEvents(items); setError(null) }).catch((e) => setError(e.message)), { intervalMs: 5_000 })
 
   return (
     <div className="p-6">
